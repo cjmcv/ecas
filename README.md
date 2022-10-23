@@ -1,1 +1,1 @@
-# dlas
+# DLAS - Deep Learning Acceleration Subprograms
