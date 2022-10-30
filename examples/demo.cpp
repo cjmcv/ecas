@@ -2,5 +2,6 @@
 
 int main() {
     HelloWorld();
+    VulkanHelloWorld();
     return 0;
 }
