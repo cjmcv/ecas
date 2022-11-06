@@ -24,10 +24,11 @@ list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_GENERIC>)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/vulkan)
 list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_VULKAN>)
 
-add_library(${PROJECT_NAME} STATIC ${DLAS_OBJECTS_TO_LINK} )  #SHARED${SRC_LIST}
+
+add_library(${PROJECT_NAME} STATIC ${DLAS_OBJECTS_TO_LINK})  #SHARED${SRC_LIST}
+target_link_libraries(${PROJECT_NAME} -lvulkan)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES output_name "dlas") 
-# target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES})
 
 # Set output path
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR})
