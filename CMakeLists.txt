@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
 
 # Define project name
 project(dlas)
@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC") # Set for .so
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g") 
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
-set(OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build)
+set(OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 ############################################
 # dlas source
