@@ -3,6 +3,7 @@
 */
 
 #include "timer.hpp"
+#include <float.h>
 
 namespace dlas {
 namespace util {

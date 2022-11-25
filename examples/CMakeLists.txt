@@ -15,8 +15,8 @@ include_directories(${INCLUDE_LIST})
 # message(STATUS "test src: ${EXAMPLE_SRC_LIST}")
 
 # Build
-add_executable(demo.out ${CMAKE_CURRENT_LIST_DIR}/demo.cpp)
-target_link_libraries(demo.out dlas)
+add_executable(demo ${CMAKE_CURRENT_LIST_DIR}/demo.cpp)
+target_link_libraries(demo dlas)
 
 # Set output path
 set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR})

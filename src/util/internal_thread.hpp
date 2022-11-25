@@ -6,6 +6,8 @@
 #ifndef DLAS_UTIL_INTERNAL_THREAD_HPP_
 #define DLAS_UTIL_INTERNAL_THREAD_HPP_
 
+#include <memory>
+#include <thread>
 #include <thread>
 
 namespace dlas {

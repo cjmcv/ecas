@@ -4,6 +4,7 @@
 */
 
 #include "internal_thread.hpp"
+#include "logging.hpp"
 
 namespace dlas {
 namespace util {
@@ -18,14 +19,14 @@ bool InternalThread::IsMustStop() {
 
 bool InternalThread::Start() {
     if (is_started()) {
-        printf("Threads should persist and not be restarted.");
+        LOG(ERROR) << "Threads should persist and not be restarted.";
         return false;
     }
     try {
         thread_.reset(new std::thread(&InternalThread::Entry, this));
     }
     catch (std::exception& e) {
-        printf("Thread exception: %s", e.what());
+        LOG(ERROR) << "Thread exception: " << e.what();
     }
     return true;
 }
@@ -38,7 +39,7 @@ void InternalThread::Stop() {
             thread_->join();
         }
         catch (std::exception& e) {
-            printf("Thread exception: %s", e.what());
+            LOG(ERROR) << "Thread exception: " << e.what();
         }
     }
 }

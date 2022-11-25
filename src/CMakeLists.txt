@@ -18,16 +18,19 @@ file(GLOB_RECURSE SRC_LIST
 message(STATUS "src: ${SRC_LIST}")
 
 set(DLAS_OBJECTS_TO_LINK "")
+set(DLAS_LIBS_TO_LINK "")
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/generic)
 list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_GENERIC>)
 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/vulkan)
-list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_VULKAN>)
-
+if (DLAS_GPU_USE_VULKAN)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/vulkan)
+    list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_VULKAN>)
+    list(APPEND DLAS_LIBS_TO_LINK -lvulkan)
+endif()
 
 add_library(${PROJECT_NAME} STATIC ${DLAS_OBJECTS_TO_LINK} ${SRC_LIST})  #SHARED
-target_link_libraries(${PROJECT_NAME} -lvulkan)
+target_link_libraries(${PROJECT_NAME} ${DLAS_LIBS_TO_LINK})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES output_name "dlas") 
 
