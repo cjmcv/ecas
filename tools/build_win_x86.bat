@@ -7,7 +7,6 @@ set VULKAN_SDK=D:/software/VulkanSDK/1.3.231.1/
 
 mkdir build-x86
 pushd build-x86
-cmake -G "MinGW Makefiles" -DVULKAN_WIN_SDK:STRING=%VULKAN_SDK% ..
+cmake -G "MinGW Makefiles" -DVULKAN_WIN_SDK:STRING=%VULKAN_SDK% ../..
 mingw32-make -j8
-:: make install
 popd

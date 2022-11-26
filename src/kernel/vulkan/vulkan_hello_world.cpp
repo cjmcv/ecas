@@ -4,6 +4,7 @@
 #include "vulkan/vulkan.h"
 // #include <stdint.h>
 
+namespace dlas {
 
 void CreateInstance(bool is_enable_validation, VkInstance *instance) {
 
@@ -185,3 +186,5 @@ void VulkanHelloWorld() {
 
 	DestroyInstance(instance);
 }
+
+} // dlas.

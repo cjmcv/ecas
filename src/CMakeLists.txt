@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.2)
 
 # Include
 SET(INCLUDE_DIR
-    ${CMAKE_CURRENT_LIST_DIR}/core
-    ${CMAKE_CURRENT_LIST_DIR}/util
+    ${PROJECT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}
 )
 message(STATUS "include: ${INCLUDE_DIR}")
 include_directories(${INCLUDE_DIR})
