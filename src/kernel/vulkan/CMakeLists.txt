@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.2)
 
-# # Include
-# SET(INCLUDE_DIR
-#     ${CMAKE_CURRENT_SOURCE_DIR}
-# )
-# message(STATUS "include: ${INCLUDE_DIR}")
-# include_directories(${INCLUDE_DIR})
+# Include
+SET(INCLUDE_DIR
+    ${VULKAN_WIN_SDK}/Include
+)
+message(STATUS "include: ${INCLUDE_DIR}")
+include_directories(${INCLUDE_DIR})
 	
 # Source
 file(GLOB_RECURSE SRC_LIST 

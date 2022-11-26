@@ -5,4 +5,4 @@ adb push ../build/libdlas.a /data/local/tmp/dlas/libdlas.a
 adb shell 
 cd /data/local/tmp
 chmod 777 -R dlas
-./dlas/demo.out
+./dlas/demo
