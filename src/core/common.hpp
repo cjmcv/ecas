@@ -6,7 +6,7 @@
 #define DLAS_CORE_COMMON_HPP_
 
 #include <iostream>
-#include "logging.hpp"
+#include "util/logger.hpp"
 
 namespace dlas {
 
@@ -32,7 +32,7 @@ namespace dlas {
         }                                               \
         break;                                          \
     default:                                            \
-        LOG(ERROR) << "Unknown type enum " << type;     \
+        DLAS_LOGE("Unknown type enum %d.\n", type);     \
     }
 
 // Get type flag from type.

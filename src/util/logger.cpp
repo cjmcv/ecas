@@ -11,6 +11,14 @@
 namespace dlas {
 namespace util {
 
+Logger::Logger() {
+    buffer_ = new char[1024];
+}
+
+Logger::~Logger() {
+    delete[] buffer_;
+}
+
 void Logger::GenerateLogMessage(const char *fname, int line, int severity) {
 #ifdef DLAS_PLATFORM_ANDRIOD
     if (severity == LogLevel::ERROR)

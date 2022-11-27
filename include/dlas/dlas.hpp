@@ -5,15 +5,27 @@
 
 namespace dlas {
 
-enum SessionMode {
-    SERIAL = 0,   // Single thread.
-    PARALLEL      // Multiple threads.
+#if defined(_MSC_VER)
+#define DLAS_API __declspec(dllexport)
+#else
+#define DLAS_API __attribute__((visibility("default")))
+#endif
+
+enum ExecutionMode {
+    DLAS_SINGLE = 0,   // Independent single task
+    DLAS_SERIAL = 1,   // Serial multitasking
+    DLAS_GRAPH         // Multitasking with Computational Graphs
+};
+
+struct SessionConfig {
+    ExecutionMode mode;
+    int num_thread;
 };
 
 // Session
-class Session {
+class DLAS_API Session {
 public:
-    Session(const std::string& name, SessionMode mode);
+    Session(const std::string &name, SessionConfig &config);
     ~Session();
 
     void Run();

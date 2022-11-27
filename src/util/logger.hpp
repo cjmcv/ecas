@@ -31,10 +31,10 @@ public:
     static int min_log_level_;
 
 private:
-    char buffer_[1024];
+    Logger();
+    ~Logger();
+    char *buffer_;
 };
-
-// #define LOG(severity) _DLAS_LOG_##severity
 
 #define DLAS_LOG_BODY(level, format, ...)                                     \
     do {                                                                      \
@@ -43,11 +43,21 @@ private:
             break;                                                            \
         sprintf(log->buffer(), format, ##__VA_ARGS__);                        \
         log->GenerateLogMessage(__FILE__, __LINE__, level);                   \
-    } while (false)
+    } while (0)
 
-#define DLAS_LOGI(format, ...)       DLAS_LOG_BODY(util::LogLevel::INFO, format, ##__VA_ARGS__);
-#define DLAS_LOGW(format, ...)    DLAS_LOG_BODY(util::LogLevel::WARNING, format, ##__VA_ARGS__);
+#define DLAS_LOGI(format, ...)      DLAS_LOG_BODY(util::LogLevel::INFO, format, ##__VA_ARGS__);
+#define DLAS_LOGW(format, ...)      DLAS_LOG_BODY(util::LogLevel::WARNING, format, ##__VA_ARGS__);
 #define DLAS_LOGE(format, ...)      DLAS_LOG_BODY(util::LogLevel::ERROR, format, ##__VA_ARGS__);
+
+#define DLAS_CNT_LOGI(cnt, format, ...)           \
+    do {                                          \
+        static int count = 0;                     \
+        count++;                                  \
+        if (count >= cnt) {                       \
+            DLAS_LOGI(format, ##__VA_ARGS__);     \
+            count = 0;                            \
+        } while (0)                               \
+    }
 
 } // util
 } // dlas

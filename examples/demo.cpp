@@ -4,7 +4,10 @@ int main() {
     dlas::HelloWorld();
     dlas::VulkanHelloWorld();
     
-    dlas::Session *session = new dlas::Session("s1", dlas::SessionMode::SERIAL);
+    dlas::SessionConfig config;
+    config.mode = dlas::ExecutionMode::DLAS_SINGLE;
+    config.num_thread = 1;
+    dlas::Session *session = new dlas::Session("s1", config);
     session->Run();
     return 0;
 }
