@@ -4,6 +4,7 @@
 
 #include "dlas/dlas.hpp"
 #include <iostream>
+#include "util/logger.hpp"
 
 namespace dlas {
 
@@ -26,7 +27,7 @@ Session::~Session() {
 
 void Session::Run() {
     SessionParams *p = (SessionParams *)params_;
-    printf("Session Running: %s, %d.\n", p->name.c_str(), p->mode);
+    DLAS_LOGI("Session Running: %s, %d.\n", p->name.c_str(), p->mode);
 }
 
 } // dlas.
