@@ -17,6 +17,11 @@ enum ExecutionMode {
     DLAS_GRAPH         // Multitasking with Computational Graphs
 };
 
+enum OpTag {
+    CUSTOM = 0, // 
+    VECTOR_ADD, 
+};
+
 struct SessionConfig {
     ExecutionMode mode;
     int num_thread;
@@ -27,7 +32,7 @@ class DLAS_API Session {
 public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
-
+    void CreateNode(const std::string &name, OpTag op_tag);
     void Run();
 
 private:

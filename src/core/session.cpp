@@ -10,7 +10,10 @@
 #include "dlas/dlas.hpp"
 
 #include <iostream>
+#include <vector>
 #include "util/logger.hpp"
+
+#include "node.hpp"
 
 namespace dlas {
 
@@ -18,6 +21,8 @@ struct SessionParams {
     std::string name;
     ExecutionMode mode;
     int num_thread;
+    
+    std::vector<Node *> nodes;
 };
 
 Session::Session(const std::string &name, SessionConfig &config) {
@@ -31,6 +36,13 @@ Session::Session(const std::string &name, SessionConfig &config) {
 
 Session::~Session() {
     delete (SessionParams *)params_;
+}
+
+void Session::CreateNode(const std::string &name, OpTag op_tag) {
+    SessionParams *p = (SessionParams *)params_;
+    Node *n = new Node(name);
+    n->SetOpTag(op_tag);
+    p->nodes.push_back(n);
 }
 
 void Session::Run() {

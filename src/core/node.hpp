@@ -7,6 +7,7 @@
 
 #include <string>
 #include <functional>
+#include "dlas/dlas.hpp"
 
 namespace dlas {
 
@@ -21,14 +22,17 @@ class Node {
     using Task = std::function<void(Tensor *input, Tensor *output)>;
 
 public:
-    Node() {}
+    Node(const std::string &name);
     Node(Task &&c) : task_(c), name_("noname") {}
     ~Node() {}
+
+    void SetOpTag(OpTag op_tag);
     void Run(Tensor *input, Tensor *output) { task_(input, output); }
 
 private:
     Task task_;
     std::string name_;
+    OpTag op_tag_;
 };
 
 }  // end of namespace dlas.
