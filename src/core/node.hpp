@@ -6,7 +6,6 @@
 #define DLAS_CORE_NODE_HPP_
 
 #include <string>
-#include <functional>
 #include "dlas/dlas.hpp"
 
 namespace dlas {
@@ -18,16 +17,16 @@ class Tensor;
 // TODO: 可选择已注册的kernel函数，也可以外设自己的函数
 
 class Node {
-
-    using Task = std::function<void(Tensor *input, Tensor *output)>;
-
+    
 public:
-    Node(const std::string &name);
-    Node(Task &&c) : task_(c), name_("noname") {}
-    ~Node() {}
+    Node(const std::string &name, OpTag tag);
+    Node(const std::string &name, Task &&c);
+    ~Node();
 
     void SetOpTag(OpTag op_tag);
-    void Run(Tensor *input, Tensor *output) { task_(input, output); }
+
+    // template <typename INTYPE, typename OUTTYPE>
+    void Run(void *input, void *output) { task_(input, output); }
 
 private:
     Task task_;

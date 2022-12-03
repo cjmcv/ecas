@@ -2,6 +2,7 @@
 #define DLAS_CXX_API_HPP_
 
 #include <string>
+#include <functional>
 
 namespace dlas {
 
@@ -27,12 +28,15 @@ struct SessionConfig {
     int num_thread;
 };
 
+using Task = std::function<void(void *input, void *output)>;
+
 // Session
 class DLAS_API Session {
 public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
     void CreateNode(const std::string &name, OpTag op_tag);
+    void CreateNode(const std::string &name, Task &&c);
     void Run();
 
 private:

@@ -11,8 +11,8 @@
 
 #include <iostream>
 #include <vector>
-#include "util/logger.hpp"
 
+#include "util/logger.hpp"
 #include "node.hpp"
 
 namespace dlas {
@@ -40,14 +40,24 @@ Session::~Session() {
 
 void Session::CreateNode(const std::string &name, OpTag op_tag) {
     SessionParams *p = (SessionParams *)params_;
-    Node *n = new Node(name);
-    n->SetOpTag(op_tag);
-    p->nodes.push_back(n);
+    p->nodes.push_back(new Node(name, op_tag));
+}
+
+void Session::CreateNode(const std::string &name, Task &&c) {
+    SessionParams *p = (SessionParams *)params_;
+    p->nodes.push_back(new Node(name, std::forward<Task>(c)));
 }
 
 void Session::Run() {
     SessionParams *p = (SessionParams *)params_;
     DLAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
+
+    float a = 1.2;
+    float b = 2.3;
+    for (int i=0; i<p->nodes.size(); i++) {
+        p->nodes[i]->Run(&a, &b);
+    }
+    // TODO: 使用调度器，根据调度器来调度计算节点，含线程开辟；内存planer/内存池；
 }
 
 } // dlas.
