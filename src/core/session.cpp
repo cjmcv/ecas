@@ -11,9 +11,11 @@
 
 #include <iostream>
 #include <vector>
+#include <cstdarg>
 
 #include "util/logger.hpp"
 #include "node.hpp"
+#include "tensor.hpp"
 
 namespace dlas {
 
@@ -23,6 +25,8 @@ struct SessionParams {
     int num_thread;
     
     std::vector<Node *> nodes;
+    std::vector<Tensor *> inputs;
+    std::vector<Tensor *> outputs;
 };
 
 Session::Session(const std::string &name, SessionConfig &config) {
@@ -31,21 +35,72 @@ Session::Session(const std::string &name, SessionConfig &config) {
     p->mode = config.mode;
     p->num_thread = config.num_thread;
 
+    p->nodes.clear();
+    p->inputs.clear();
+    p->outputs.clear();
     params_ = (void *)p;
 }
 
 Session::~Session() {
+    SessionParams *p = new SessionParams;
+    for (int i = 0; i < p->nodes.size(); i++) {
+        delete p->nodes[i];
+    }
+    p->nodes.clear();
+    std::vector<Node *>().swap(p->nodes);
+    //
+    for (int i = 0; i < p->inputs.size(); i++) {
+        delete p->inputs[i];
+    }
+    p->inputs.clear();
+    std::vector<Tensor *>().swap(p->inputs);
+    //
+    for (int i = 0; i < p->outputs.size(); i++) {
+        delete p->outputs[i];
+    }
+    p->outputs.clear();
+    std::vector<Tensor *>().swap(p->outputs);
+
     delete (SessionParams *)params_;
+}
+
+// TODO: 设IO节点，将IO绑定到节点中
+// rvalue references
+void Session::CreateInput(std::vector<unsigned int> &&shape) {
+    SessionParams *p = (SessionParams *)params_;
+    p->inputs.push_back(new Tensor(shape));
+    printf("in1 shape: %d.\n", shape.size());
+}
+
+void Session::CreateInput(std::vector<std::vector<unsigned int>> &&shapes) {
+    SessionParams *p = (SessionParams *)params_;
+    for (int i=0; i<shapes.size(); i++) {
+        printf("in2 shape: %d.\n", shapes[i].size());
+        p->inputs.push_back(new Tensor(shapes[i]));        
+    }
+}
+
+void Session::CreateOutput(std::vector<unsigned int> &&shape) {
+    SessionParams *p = (SessionParams *)params_;
+    p->outputs.push_back(new Tensor(shape));
+    printf("out1 shape: %d.\n", shape.size());
+}
+
+void Session::CreateOutput(std::vector<std::vector<unsigned int>> &&shapes) {
+    SessionParams *p = (SessionParams *)params_;
+    for (int i=0; i<shapes.size(); i++) {
+        printf("out2 shape: %d.\n", shapes[i].size());
+        p->outputs.push_back(new Tensor(shapes[i]));        
+    }
 }
 
 void Session::CreateNode(const std::string &name, OpTag op_tag) {
     SessionParams *p = (SessionParams *)params_;
     p->nodes.push_back(new Node(name, op_tag));
 }
-
-void Session::CreateNode(const std::string &name, Task &&c) {
+void Session::CreateNode(const std::string &name, Task &&task) {
     SessionParams *p = (SessionParams *)params_;
-    p->nodes.push_back(new Node(name, std::forward<Task>(c)));
+    p->nodes.push_back(new Node(name, std::forward<Task>(task)));
 }
 
 void Session::Run() {

@@ -10,11 +10,13 @@
 
 namespace dlas {
 
+// 内存管理，只管内存不管怎么用
 class Buffer {
 
 public:
-    Buffer();
+    Buffer(unsigned int size);
     ~Buffer();
+    inline void *data() { return data_; }
 
 private:
     int size_;

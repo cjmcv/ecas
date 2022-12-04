@@ -2,6 +2,7 @@
 #define DLAS_CXX_API_HPP_
 
 #include <string>
+#include <vector>
 #include <functional>
 
 namespace dlas {
@@ -13,9 +14,15 @@ namespace dlas {
 #endif
 
 enum ExecutionMode {
-    DLAS_SINGLE = 0,   // Independent single task
-    DLAS_SERIAL = 1,   // Serial multitasking
-    DLAS_GRAPH         // Multitasking with Computational Graphs
+    SINGLE = 0,   // Independent single task
+    SERIAL = 1,   // Serial multitasking
+    GRAPH         // Multitasking with Computational Graphs
+};
+
+enum NodeProperty {
+    COMPUTE = 0, 
+    INPUT, // 
+    OUTPUT,
 };
 
 enum OpTag {
@@ -35,8 +42,15 @@ class DLAS_API Session {
 public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
+
+    void CreateInput(std::vector<unsigned int> &&shape);
+    void CreateInput(std::vector<std::vector<unsigned int>> &&shapes);
+    void CreateOutput(std::vector<unsigned int> &&shape);
+    void CreateOutput(std::vector<std::vector<unsigned int>> &&shapes);
+
     void CreateNode(const std::string &name, OpTag op_tag);
-    void CreateNode(const std::string &name, Task &&c);
+    void CreateNode(const std::string &name, Task &&task);
+    
     void Run();
 
 private:

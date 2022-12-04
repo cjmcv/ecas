@@ -13,15 +13,17 @@
 
 namespace dlas {
 
+// 基本数据计算与操作
 class Tensor {
 
 public:
-    Tensor();
+    Tensor(std::vector<unsigned int> &shape);
     ~Tensor();
 
 private:
     // dimension.
-    std::vector<int> shape_;
+    int size_;
+    std::vector<unsigned int> shape_;
     Buffer *buffer_;
 };
 
