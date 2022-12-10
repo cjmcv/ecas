@@ -13,7 +13,8 @@ Tensor::Tensor(std::vector<unsigned int> &shape) {
     }
     if (size_ == 0)
         std::abort();
-        
+    
+    shape_ = shape;
     buffer_ = new Buffer(size_);
 }
 

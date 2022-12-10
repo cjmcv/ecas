@@ -13,16 +13,15 @@ int main() {
     config.num_thread = 1;
     dlas::Session *session = new dlas::Session("s1", config);
 
-    session->CreateInput({{2, 3}, 
-                          {1, 2, 3}});
-    session->CreateOutput({2, 3});
-    session->CreateOutput({{2, 3}, 
-                           {1, 2, 3}});
+    session->CreateInput({{2, 2}, 
+                          {2, 2}});
+    session->CreateOutput({2, 2});
 
     session->CreateNode("n1", dlas::OpTag::VECTOR_ADD);
     session->CreateNode("n2", TaskA);
 
-    session->Run();
+    // TODO: n1 + n2 => g1
+    session->Run("n2");
     
     return 0;
 }

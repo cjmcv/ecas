@@ -51,7 +51,7 @@ public:
     void CreateNode(const std::string &name, OpTag op_tag);
     void CreateNode(const std::string &name, Task &&task);
     
-    void Run();
+    void Run(const std::string &name);
 
 private:
     void *params_;
