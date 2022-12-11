@@ -43,14 +43,12 @@ public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
 
-    void CreateInput(std::vector<unsigned int> &&shape);
-    void CreateInput(std::vector<std::vector<unsigned int>> &&shapes);
-    void CreateOutput(std::vector<unsigned int> &&shape);
-    void CreateOutput(std::vector<std::vector<unsigned int>> &&shapes);
-
     void CreateNode(const std::string &name, OpTag op_tag);
     void CreateNode(const std::string &name, Task &&task);
-    
+    void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
+
+    void BuildGraph(std::vector<std::vector<std::string>> &&relation);
+
     void Run(const std::string &name);
 
 private:

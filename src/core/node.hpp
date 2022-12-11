@@ -18,12 +18,23 @@ class Tensor;
 
 class Node {
 public:
+    Node(): input_nodes_(nullptr), output_nodes_(nullptr) {}
     virtual ~Node() {};
     virtual void Run(void *input, void *output) = 0;
+
+    inline std::string &name() { return name_; }
+    inline void SetInputNodes(std::vector<Node *> *input_nodes) { input_nodes_ = input_nodes; };
+    inline void SetOutputNodes(std::vector<Node *> *output_nodes) { output_nodes_ = output_nodes; };
+
+    inline std::vector<Node *> *input_nodes() { return input_nodes_; }
+    inline std::vector<Node *> *output_nodes() { return output_nodes_; }
 
 protected:
     std::string name_;
     OpTag op_tag_;
+
+    std::vector<Node *> *input_nodes_;
+    std::vector<Node *> *output_nodes_;
 };
 
 }  // end of namespace dlas.
