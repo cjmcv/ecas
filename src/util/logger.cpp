@@ -28,8 +28,10 @@ void Logger::GenerateLogMessage(const char *fname, int line, int severity) {
     else
         __android_log_print(ANDROID_LOG_INFO, "com.dlas", "[%s:%d] %s", fname, line, buffer_);
 #else
-    fprintf(stderr, "<%c>", "IIWE"[severity]);
-    fprintf(stderr, " %s:%d] ", fname, line);
+    if (severity != LogLevel::INFO_SIMPLE) {
+        fprintf(stderr, "<%c>", "IIWE"[severity]);
+        fprintf(stderr, " %s:%d] ", fname, line);        
+    }
     fprintf(stderr, "%s", buffer_);
 #endif // DLAS_PLATFORM_ANDRIOD
 
@@ -37,7 +39,7 @@ void Logger::GenerateLogMessage(const char *fname, int line, int severity) {
         std::abort();
 }
 
-int Logger::min_log_level_ = LogLevel::INFO;
+int Logger::min_log_level_ = LogLevel::INFO_SIMPLE;
 
 } // util
 } // dlas

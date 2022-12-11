@@ -12,9 +12,10 @@ namespace dlas {
 namespace util {
 
 enum LogLevel {
-    INFO = 0,
-    WARNING = 1,
-    ERROR = 2
+    INFO_SIMPLE = 0,
+    INFO,
+    WARNING,
+    ERROR
 };
 
 class Logger {
@@ -23,6 +24,7 @@ public:
         static Logger instance;
         return &instance;
     }
+    static inline void SetMinLogLevel(LogLevel level) { min_log_level_ = level; }
 
     inline char *buffer() { return buffer_; }
     void GenerateLogMessage(const char *fname, int line, int severity);
@@ -45,6 +47,7 @@ private:
         log->GenerateLogMessage(__FILE__, __LINE__, level);                   \
     } while (0)
 
+#define DLAS_LOGS(format, ...)      DLAS_LOG_BODY(util::LogLevel::INFO_SIMPLE, format, ##__VA_ARGS__);
 #define DLAS_LOGI(format, ...)      DLAS_LOG_BODY(util::LogLevel::INFO, format, ##__VA_ARGS__);
 #define DLAS_LOGW(format, ...)      DLAS_LOG_BODY(util::LogLevel::WARNING, format, ##__VA_ARGS__);
 #define DLAS_LOGE(format, ...)      DLAS_LOG_BODY(util::LogLevel::ERROR, format, ##__VA_ARGS__);

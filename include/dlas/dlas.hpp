@@ -49,6 +49,7 @@ public:
 
     void BuildGraph(std::vector<std::vector<std::string>> &&relation);
 
+    void ShowInfo();
     void Run(const std::string &name);
 
 private:

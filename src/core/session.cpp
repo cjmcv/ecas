@@ -103,7 +103,6 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
         iter->second->SetInputNodes(inputs);
         std::vector<Node*> *outputs = p->topo.GetOutputs(iter->second);
         iter->second->SetOutputNodes(outputs);
-        printf("a %s: %d, %d, (%d, %d) .\n", iter->second->name().c_str(), inputs, outputs, iter->second->input_nodes() == nullptr, iter->second->output_nodes() == nullptr);
     }
     // Find the graph IO nodes according to the number of inputs and outputs.
     // Input node of the graph: no input.
@@ -117,36 +116,53 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
         }
         else if (iter->second->input_nodes() == nullptr) {
             p->input_nodes.push_back(iter->second);
-            // printf("input node: %s \n", iter->second->name().c_str());
         }
         else if (iter->second->output_nodes() == nullptr) {
             p->output_nodes.push_back(iter->second);
-            // printf("output node: %s \n", iter->second->name().c_str());
         }
     }
+}
 
-    //
-    printf("Input nodes: \n");
+void Session::ShowInfo() {
+    SessionParams *p = (SessionParams *)params_;
+
+    DLAS_LOGS("\n>>>>>>>>> Session ShowInfo >>>>>>>>>\n");
+    DLAS_LOGS("Session: %s.\n", p->name.c_str());
+    DLAS_LOGS("Input nodes: ");
     for (int i=0; i<p->input_nodes.size(); i++) {
-        printf("%s, ", p->input_nodes[i]->name().c_str());
+        DLAS_LOGS("%s", p->input_nodes[i]->name().c_str());
+        if (i != p->input_nodes.size() - 1) DLAS_LOGS(", ");
     }
-    printf("\n");
-    printf("Output nodes: \n");
+    DLAS_LOGS("\n");
+    DLAS_LOGS("Output nodes: ");
     for (int i=0; i<p->output_nodes.size(); i++) {
-        printf("%s, ", p->output_nodes[i]->name().c_str());
+        DLAS_LOGS("%s", p->output_nodes[i]->name().c_str());
+        if (i != p->output_nodes.size() - 1) DLAS_LOGS(", ");
     }
-    printf("\n");
-    // printf("%s: %d, %d, %d.\n", iter->first.c_str(), iter->second, &(iter->second->input_nodes())[0], &(iter->second->output_nodes())[0]);
-        
-    // DLAS_LOGI("Session: %s.\n", p->name.c_str());
-    // DLAS_LOGI("Input nodes: ");
-    // for (int i=0; i<p->input_nodes.size(); i++) {
-    //     DLAS_LOGI("%s, ", p->input_nodes[i]->name().c_str());
-    // }
-    // DLAS_LOGI("Output nodes: ");
-    // for (int i=0; i<p->input_nodes.size(); i++) {
-    //     DLAS_LOGI("%s, ", p->output_nodes[i]->name().c_str());
-    // }
+    DLAS_LOGS("\n");
+
+    std::map<std::string, Node*>::iterator iter;
+    for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
+        Node *n = iter->second;
+        std::vector<Node *> *ins = n->input_nodes();
+        std::vector<Node *> *outs = n->output_nodes();
+        DLAS_LOGS("node: %s -> in: [", n->name().c_str());
+        if (ins != nullptr) {
+            for(int i=0; i<ins->size(); i++) {
+                DLAS_LOGS("%s", (*ins)[i]->name().c_str());
+                if (i != ins->size() - 1) DLAS_LOGS(", ");
+            }
+        }
+        DLAS_LOGS("], out: [");
+        if (outs != nullptr) {
+            for(int i=0; i<outs->size(); i++) {
+                DLAS_LOGS("%s", (*outs)[i]->name().c_str());
+                if (i != outs->size() - 1) DLAS_LOGS(", ");
+            }
+        }
+        DLAS_LOGS("].\n");
+    }
+    DLAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 }
 
 void Session::Run(const std::string &name) {

@@ -13,7 +13,7 @@ Topology::Topology() {}
 Topology::~Topology() {}
 
 void Topology::Build(std::map<std::string, Node*> &nodes, std::vector<std::vector<std::string>> &&relation) {
-        for (int i=0; i<relation.size(); i++) {
+    for (int i=0; i<relation.size(); i++) {
         for (int j=1; j<relation[i].size(); j++) {
             printf("%s->%s.\n", relation[i][j-1].c_str(), relation[i][j].c_str());    
         }
@@ -44,24 +44,20 @@ void Topology::Build(std::map<std::string, Node*> &nodes, std::vector<std::vecto
             io_iter = output_map_.find(target);
             if(io_iter != output_map_.end()) {
                 io_iter->second.push_back(n_out);
-                printf("size1: %d, %d.\n", target, io_iter->second.size());
             }
             else {
                 std::vector<Node*> vec = {n_out};
                 output_map_.insert(std::make_pair(target, vec));
-                printf("size2: %d, %d.\n", target, vec.size());    
             }
             
             // Set Input.
             io_iter = input_map_.find(n_out);
             if(io_iter != input_map_.end()) {
                 io_iter->second.push_back(target);
-                printf("size3: %d, %d.\n", n_out, io_iter->second.size());
             }
             else {
                 std::vector<Node*> vec = {target};
                 input_map_.insert(std::make_pair(n_out, vec));
-                printf("size4: %d, %d.\n", n_out, vec.size()); 
             }
         }
     }
