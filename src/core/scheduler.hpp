@@ -17,9 +17,17 @@ namespace dlas {
 
 class Scheduler {
 
-public:
-    void BuildGroup(std::map<std::string, Node*> &nodes, std::vector<std::vector<std::string>> &&groups);
+public:    
+    /// Serial Execution
+    // Breadth First.
+    void BfsExecute(Node *input_node, ITensor *input_data);
+
+    /// Parallel execution
+    // Group nodes, and each group uses one thread.
+    void BuildGroup(std::map<std::string, Node*> &nodes, 
+                    std::vector<std::vector<std::string>> &&groups);
     void ShowGroups();
+
 private:
     std::vector<std::vector<Node *>> groups_;
 };

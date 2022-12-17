@@ -20,7 +20,7 @@ class Node {
 public:
     Node(): input_nodes_(nullptr), output_nodes_(nullptr) {}
     virtual ~Node() {};
-    virtual void Run(void *input, void *output) = 0;
+    virtual void Run(ITensor *input, ITensor *output) = 0;
 
     inline std::string &name() { return name_; }
     inline void SetInputNodes(std::vector<Node *> *input_nodes) { input_nodes_ = input_nodes; };

@@ -4,9 +4,30 @@
 
 #include "scheduler.hpp"
 
+#include <queue>
+
 namespace dlas {
 
-void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes, std::vector<std::vector<std::string>> &&groups) {
+void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
+    std::queue<Node *> tasks;
+    tasks.push(input_node);
+    while (!tasks.empty()) {
+        Node *t = tasks.front();
+        ITensor *input;
+        ITensor *output;
+        t->Run(input, output);
+        std::vector<Node *> *outs = t->output_nodes();
+        if (outs != nullptr) {
+            for (int i=0; i<outs->size(); i++) {
+                tasks.push((*outs)[i]);
+            }            
+        }
+        tasks.pop();
+    }
+}
+
+void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes, 
+                           std::vector<std::vector<std::string>> &&groups) {
     groups_.resize(groups.size());
     for (int i = 0; i < groups.size(); i++) {
         groups_[i].resize(groups[i].size());

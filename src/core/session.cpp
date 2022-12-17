@@ -32,8 +32,8 @@ struct SessionParams {
     std::vector<Tensor *> outputs;
 
     std::map<std::string, Node*> nodes; // 包含普通节点和组合节点
-    std::vector<Node *> input_nodes;
-    std::vector<Node *> output_nodes;
+    Node *input_node;
+    Node *output_node;
 
     Topology topo;
     Scheduler scheduler; 
@@ -44,6 +44,9 @@ struct SessionParams {
         nodes.clear();
         inputs.clear();
         outputs.clear();
+
+        input_node = nullptr;
+        output_node = nullptr;
     }
     ~SessionParams() {
         for(std::map<std::string, Node*>::iterator iter = nodes.begin(); 
@@ -80,10 +83,6 @@ Session::~Session() {
     delete (SessionParams *)params_;
 }
 
-void Session::CreateNode(const std::string &name, OpTag op_tag) {
-    SessionParams *p = (SessionParams *)params_;
-    p->nodes.insert(std::make_pair(name, new NormalNode(name, op_tag)));
-}
 void Session::CreateNode(const std::string &name, Task &&task) {
     SessionParams *p = (SessionParams *)params_;
     p->nodes.insert(std::make_pair(name, new NormalNode(name, std::forward<Task>(task))));
@@ -109,20 +108,25 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
     // Find the graph IO nodes according to the number of inputs and outputs.
     // Input node of the graph: no input.
     // Output node of the graph: no output.
+    // Only one input node and one output node are allowed
     // Nodes with neither input nor output are not included in the graph.
-    p->input_nodes.clear();
-    p->output_nodes.clear();
     for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
         if (iter->second->input_nodes() == nullptr && iter->second->output_nodes() == nullptr) {
             // independent, not included in the graph
         }
         else if (iter->second->input_nodes() == nullptr) {
-            p->input_nodes.push_back(iter->second);
+            if (p->input_node != nullptr) 
+                DLAS_LOGE("Only one input node is allowed.\n");
+            p->input_node = iter->second;
         }
         else if (iter->second->output_nodes() == nullptr) {
-            p->output_nodes.push_back(iter->second);
+            if (p->output_node != nullptr) 
+                DLAS_LOGE("Only one output node is allowed.\n");
+            p->output_node = iter->second;
         }
     }
+    // 
+    // p->scheduler.PrepareIoBuffer();
 }
 
 void Session::Group(std::vector<std::vector<std::string>> &&groups) {
@@ -135,18 +139,9 @@ void Session::ShowInfo() {
 
     DLAS_LOGS("\n>>>>>>>>> Session ShowInfo >>>>>>>>>\n");
     DLAS_LOGS("Session: %s.\n", p->name.c_str());
-    DLAS_LOGS("Input nodes: ");
-    for (int i=0; i<p->input_nodes.size(); i++) {
-        DLAS_LOGS("%s", p->input_nodes[i]->name().c_str());
-        if (i != p->input_nodes.size() - 1) DLAS_LOGS(", ");
-    }
+    DLAS_LOGS("Input node: %s.\n", p->input_node->name().c_str());
+    DLAS_LOGS("Output node: %s.\n", p->output_node->name().c_str());
     DLAS_LOGS("\n");
-    DLAS_LOGS("Output nodes: ");
-    for (int i=0; i<p->output_nodes.size(); i++) {
-        DLAS_LOGS("%s", p->output_nodes[i]->name().c_str());
-        if (i != p->output_nodes.size() - 1) DLAS_LOGS(", ");
-    }
-    DLAS_LOGS("\n\n");
     //
     std::map<std::string, Node*>::iterator iter;
     for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
@@ -174,21 +169,15 @@ void Session::ShowInfo() {
     DLAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 }
 
-void Session::Run(const std::string &name) {
+void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
     DLAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
 
-    float a = 1.2;
-    float b = 2.3;
-    std::map<std::string, Node*>::iterator iter = p->nodes.find(name);
-    if(iter != p->nodes.end()){
-        iter->second->Run(&a, &b);
-    }
-    else{
-        DLAS_LOGI("Can not find node named %s .\n", name);
-    }
+    p->scheduler.BfsExecute(p->input_node, &in);
+}
 
-    // TODO: 使用调度器，根据调度器来调度计算节点，含线程开辟；内存planer/内存池；
+void Session::GetResult(ITensor **out) {
+    
 }
 
 } // dlas.

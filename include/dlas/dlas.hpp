@@ -35,7 +35,12 @@ struct SessionConfig {
     int num_thread;
 };
 
-using Task = std::function<void(void *input, void *output)>;
+struct ITensor {
+    char *data;
+    int len;
+};
+
+using Task = std::function<void(ITensor *input, ITensor *output)>;
 
 // Session
 class DLAS_API Session {
@@ -51,12 +56,14 @@ public:
     void Group(std::vector<std::vector<std::string>> &&groups);
 
     void ShowInfo();
-    void Run(const std::string &name);
+    void Feed(ITensor &in);
+    void GetResult(ITensor **out);
 
 private:
     void *params_;
 };
 
+// Independent acceleration functions
 void HelloWorld();
 void VulkanHelloWorld();
 

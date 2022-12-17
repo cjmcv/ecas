@@ -13,11 +13,10 @@ namespace dlas {
 class NormalNode: public Node {
     
 public:
-    NormalNode(const std::string &name, OpTag tag);
     NormalNode(const std::string &name, Task &&c);
     ~NormalNode();
 
-    virtual void Run(void *input, void *output) { task_(input, output); }
+    virtual void Run(ITensor *input, ITensor *output) { task_(input, output); }
 
 private:
     Task task_;

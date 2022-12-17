@@ -16,7 +16,7 @@ public:
     CompositeNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
     ~CompositeNode();
 
-    virtual void Run(void *input, void *output) { task_(input, output); }
+    virtual void Run(ITensor *input, ITensor *output) { task_(input, output); }
 
 private:
     Task task_;
