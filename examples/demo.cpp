@@ -22,6 +22,7 @@ int main() {
 
     session->CreateNode("n4", {{"n1", "n2"}, {"n2", "n3"}});
     session->BuildGraph({{"n1", "n2"}, {"n2", "n3"}});
+    session->Group({{"n1"}, {"n2", "n3"}});
     session->ShowInfo();
 
     // session->GetNodeIO("n1", Tenosr *in, Tensor *out);

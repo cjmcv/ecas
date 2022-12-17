@@ -19,6 +19,7 @@
 #include "composite_node.hpp"
 #include "tensor.hpp"
 #include "topology.hpp"
+#include "scheduler.hpp"
 
 namespace dlas {
 
@@ -35,6 +36,7 @@ struct SessionParams {
     std::vector<Node *> output_nodes;
 
     Topology topo;
+    Scheduler scheduler; 
 
     SessionParams() {
         name = "noname";
@@ -123,6 +125,11 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
     }
 }
 
+void Session::Group(std::vector<std::vector<std::string>> &&groups) {
+    SessionParams *p = (SessionParams *)params_;
+    p->scheduler.BuildGroup(p->nodes, std::forward<std::vector<std::vector<std::string>>>(groups));
+}
+
 void Session::ShowInfo() {
     SessionParams *p = (SessionParams *)params_;
 
@@ -139,14 +146,14 @@ void Session::ShowInfo() {
         DLAS_LOGS("%s", p->output_nodes[i]->name().c_str());
         if (i != p->output_nodes.size() - 1) DLAS_LOGS(", ");
     }
-    DLAS_LOGS("\n");
-
+    DLAS_LOGS("\n\n");
+    //
     std::map<std::string, Node*>::iterator iter;
     for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
         Node *n = iter->second;
         std::vector<Node *> *ins = n->input_nodes();
         std::vector<Node *> *outs = n->output_nodes();
-        DLAS_LOGS("node: %s -> in: [", n->name().c_str());
+        DLAS_LOGS("node: %s (%d) -> in: [", n->name().c_str(), n);
         if (ins != nullptr) {
             for(int i=0; i<ins->size(); i++) {
                 DLAS_LOGS("%s", (*ins)[i]->name().c_str());
@@ -162,6 +169,8 @@ void Session::ShowInfo() {
         }
         DLAS_LOGS("].\n");
     }
+    DLAS_LOGS("\n");
+    p->scheduler.ShowGroups();
     DLAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 }
 

@@ -48,6 +48,7 @@ public:
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
 
     void BuildGraph(std::vector<std::vector<std::string>> &&relation);
+    void Group(std::vector<std::vector<std::string>> &&groups);
 
     void ShowInfo();
     void Run(const std::string &name);
