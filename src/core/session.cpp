@@ -169,9 +169,23 @@ void Session::ShowInfo() {
     ECAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 }
 
+void Session::Start() {
+    SessionParams *p = (SessionParams *)params_;
+    // Prepare input and output memory for tasks.
+    p->scheduler.SetupIoBuffer();
+    // Start all task threads.
+    p->scheduler.TasksSpawn();
+}
+
+void Session::Stop() {
+    SessionParams *p = (SessionParams *)params_;
+    p->scheduler.TasksStop();
+    p->scheduler.TasksJoin();
+}
+
 void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
-    ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
+    // ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
 
     p->scheduler.BfsExecute(p->input_node, &in);
 }

@@ -5,8 +5,13 @@
 #include "scheduler.hpp"
 
 #include <queue>
+#include <chrono>
 
 namespace ecas {
+
+Scheduler::Scheduler() {
+    is_stop_ = false;
+}
 
 void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
     std::queue<Node *> tasks;
@@ -18,12 +23,16 @@ void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
         t->Run(input, output);
         std::vector<Node *> *outs = t->output_nodes();
         if (outs != nullptr) {
-            for (int i=0; i<outs->size(); i++) {
+            for (unsigned int i=0; i<outs->size(); i++) {
                 tasks.push((*outs)[i]);
             }            
         }
         tasks.pop();
     }
+}
+
+void Scheduler::SetupIoBuffer() {
+    
 }
 
 void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes, 
@@ -50,6 +59,38 @@ void Scheduler::ShowGroups() {
             ECAS_LOGS("%d, ", groups_[i][j]);
         }
         ECAS_LOGS("\n");
+    }
+}
+
+void Scheduler::TasksSpawn() {
+    if (groups_.size() == 0) {
+        ECAS_LOGE("TasksSpawn -> groups_.size() == 0, please call function BuildGraph first.\n");
+    }
+
+    std::vector<std::vector<Node *>> &groups = groups_;
+    for (unsigned i = 0; i < groups.size(); ++i) {
+        threads_.emplace_back([this, i, groups]() -> void {
+            while (!is_stop_) {
+                for (int ni=0; ni<groups[i].size(); ni++) {
+                    printf("ni: %s, tid: %d.\n", groups[i][ni]->name().c_str(), std::this_thread::get_id());
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    // // Wait and check intputs from depends.
+                    // bool is_pass = WaitCheckInputs(node);
+                    // if (!is_pass) { break; }
+                    // Process(node, timer);                    
+                } 
+            } 
+        });
+    }
+}
+
+void Scheduler::TasksStop() {
+    is_stop_ = true;
+}
+
+void Scheduler::TasksJoin() {
+    for (auto& t : threads_) {
+      t.join();
     }
 }
 

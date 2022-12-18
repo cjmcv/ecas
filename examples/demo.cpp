@@ -34,9 +34,11 @@ int main() {
     in.data = (char *)malloc(sizeof(float) * 2);
     float *a = (float *)in.data;
     a[0] = 1; a[1] = 2;
+
+    session->Start();
     session->Feed(in);
     ecas::ITensor *out;
     session->GetResult(&out);
-
+    session->Stop();
     return 0;
 }

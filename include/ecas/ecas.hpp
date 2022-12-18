@@ -56,6 +56,10 @@ public:
     void Group(std::vector<std::vector<std::string>> &&groups);
 
     void ShowInfo();
+
+    void Start();
+    void Stop();
+
     void Feed(ITensor &in);
     void GetResult(ITensor **out);
 

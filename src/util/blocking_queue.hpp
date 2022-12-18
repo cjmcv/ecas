@@ -2,6 +2,9 @@
 #define ECAS_UTIL_BLOCKING_QUEUE_HPP_
 
 #include <queue>
+#include <mutex>
+#include <condition_variable>
+
 namespace ecas {
 namespace util {
 
