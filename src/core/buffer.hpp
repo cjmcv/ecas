@@ -2,13 +2,13 @@
 * \brief Buffer. 
 */
 
-#ifndef DLAS_CORE_BUFFER_HPP_
-#define DLAS_CORE_BUFFER_HPP_
+#ifndef ECAS_CORE_BUFFER_HPP_
+#define ECAS_CORE_BUFFER_HPP_
 
 #include <string>
 #include <vector>
 
-namespace dlas {
+namespace ecas {
 
 // 内存管理，只管内存不管怎么用
 class Buffer {
@@ -24,6 +24,6 @@ private:
     void *data_;
 };
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.
 
-#endif // DLAS_CORE_BUFFER_HPP_
+#endif // ECAS_CORE_BUFFER_HPP_

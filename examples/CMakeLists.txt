@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.2)
 project(examples)
 
 # Include
-SET(INCLUDE_LIST ${DLAS_INCLUDE_DIR})
+SET(INCLUDE_LIST ${ECAS_INCLUDE_DIR})
 message(STATUS "include: ${INCLUDE_LIST}")
 include_directories(${INCLUDE_LIST})
 
@@ -16,7 +16,7 @@ include_directories(${INCLUDE_LIST})
 
 # Build
 add_executable(demo ${CMAKE_CURRENT_LIST_DIR}/demo.cpp)
-target_link_libraries(demo dlas)
+target_link_libraries(demo ecas)
 
 # Set output path
 set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR})

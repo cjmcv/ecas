@@ -1,9 +1,9 @@
 #include <iostream>
 
-namespace dlas {
+namespace ecas {
 
 void HelloWorld() {
 	std::cout << "HelloWorld ABC!\n" << std::endl;
 }
 
-} // dlas.
+} // ecas.

@@ -2,13 +2,13 @@
 * \brief Compute node.
 */
 
-#ifndef DLAS_CORE_NORMAL_NODE_HPP_
-#define DLAS_CORE_NORMAL_NODE_HPP_
+#ifndef ECAS_CORE_NORMAL_NODE_HPP_
+#define ECAS_CORE_NORMAL_NODE_HPP_
 
 #include <string>
 #include "node.hpp"
 
-namespace dlas {
+namespace ecas {
 
 class NormalNode: public Node {
     
@@ -22,6 +22,6 @@ private:
     Task task_;
 };
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.
 
-#endif //DLAS_CORE_NORMAL_NODE_HPP_
+#endif //ECAS_CORE_NORMAL_NODE_HPP_

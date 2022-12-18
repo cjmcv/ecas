@@ -4,7 +4,7 @@
 
 #include "composite_node.hpp"
 
-namespace dlas {
+namespace ecas {
 
 CompositeNode::CompositeNode(const std::string &name, std::vector<std::vector<std::string>> &&relation) {
     name_ = name;
@@ -15,4 +15,4 @@ CompositeNode::~CompositeNode() {
 }
 
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

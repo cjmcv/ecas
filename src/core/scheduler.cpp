@@ -6,7 +6,7 @@
 
 #include <queue>
 
-namespace dlas {
+namespace ecas {
 
 void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
     std::queue<Node *> tasks;
@@ -37,7 +37,7 @@ void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes,
                 groups_[i][j] = iter->second;
             }
             else {
-                DLAS_LOGI("BuildGroup -> Can not find node named %s .\n", groups[i][j]);
+                ECAS_LOGI("BuildGroup -> Can not find node named %s .\n", groups[i][j]);
             }
         }
     }
@@ -45,12 +45,12 @@ void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes,
     
 void Scheduler::ShowGroups() {
     for (int i = 0; i < groups_.size(); i++) {
-        DLAS_LOGS("group: %d, ", i);
+        ECAS_LOGS("group: %d, ", i);
         for (int j = 0; j < groups_[i].size(); j++) {
-            DLAS_LOGS("%d, ", groups_[i][j]);
+            ECAS_LOGS("%d, ", groups_[i][j]);
         }
-        DLAS_LOGS("\n");
+        ECAS_LOGS("\n");
     }
 }
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 
 # Define project name
-project(dlas)
-set(PROJECT_NAME dlas)
+project(ecas)
+set(PROJECT_NAME ecas)
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -12,7 +12,7 @@ else()
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-option(DLAS_GPU_USE_VULKAN "GPU acceleration using vulkan" ON)
+option(ECAS_GPU_USE_VULKAN "GPU acceleration using vulkan" ON)
 
 # Release by default
 set(CMAKE_BUILD_TYPE "Release")  # Debug
@@ -24,8 +24,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 ############################################
-# dlas source
-set(DLAS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# ecas source
+set(ECAS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_subdirectory(src)
 
 ############################################

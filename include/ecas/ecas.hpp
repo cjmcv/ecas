@@ -1,16 +1,16 @@
-#ifndef DLAS_CXX_API_HPP_
-#define DLAS_CXX_API_HPP_
+#ifndef ECAS_CXX_API_HPP_
+#define ECAS_CXX_API_HPP_
 
 #include <string>
 #include <vector>
 #include <functional>
 
-namespace dlas {
+namespace ecas {
 
 #if defined(_MSC_VER)
-#define DLAS_API __declspec(dllexport)
+#define ECAS_API __declspec(dllexport)
 #else
-#define DLAS_API __attribute__((visibility("default")))
+#define ECAS_API __attribute__((visibility("default")))
 #endif
 
 enum ExecutionMode {
@@ -43,7 +43,7 @@ struct ITensor {
 using Task = std::function<void(ITensor *input, ITensor *output)>;
 
 // Session
-class DLAS_API Session {
+class ECAS_API Session {
 public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
@@ -67,6 +67,6 @@ private:
 void HelloWorld();
 void VulkanHelloWorld();
 
-} // dlas.
+} // ecas.
 
-#endif // DLAS_CXX_API_HPP_
+#endif // ECAS_CXX_API_HPP_

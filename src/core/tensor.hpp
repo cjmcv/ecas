@@ -3,15 +3,15 @@
 *        数据维度形态等，不涉及具体内存。具体内存Buffer中处理
 */
 
-#ifndef DLAS_CORE_TENSOR_HPP_
-#define DLAS_CORE_TENSOR_HPP_
+#ifndef ECAS_CORE_TENSOR_HPP_
+#define ECAS_CORE_TENSOR_HPP_
 
 #include <string>
 #include <vector>
 
 #include "buffer.hpp"
 
-namespace dlas {
+namespace ecas {
 
 // 基本数据计算与操作
 class Tensor {
@@ -27,6 +27,6 @@ private:
     Buffer *buffer_;
 };
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.
 
-#endif // DLAS_CORE_TENSOR_HPP_
+#endif // ECAS_CORE_TENSOR_HPP_

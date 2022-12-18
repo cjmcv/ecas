@@ -1,8 +1,8 @@
-#ifndef DLAS_UTIL_BLOCKING_QUEUE_HPP_
-#define DLAS_UTIL_BLOCKING_QUEUE_HPP_
+#ifndef ECAS_UTIL_BLOCKING_QUEUE_HPP_
+#define ECAS_UTIL_BLOCKING_QUEUE_HPP_
 
 #include <queue>
-namespace dlas {
+namespace ecas {
 namespace util {
 
 template <typename T>
@@ -71,6 +71,6 @@ void BlockingQueue<T>::wait_and_pop(T* t) {
 }
 
 } // namespace util
-} // namespace dlas
+} // namespace ecas
 
-#endif // DLAS_UTIL_BLOCKING_QUEUE_HPP_
+#endif // ECAS_UTIL_BLOCKING_QUEUE_HPP_

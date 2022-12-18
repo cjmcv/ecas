@@ -4,11 +4,11 @@
 
 #include "logger.hpp"
 
-#ifdef DLAS_PLATFORM_ANDRIOD
+#ifdef ECAS_PLATFORM_ANDRIOD
 #include <android/log.h>
-#endif // DLAS_PLATFORM_ANDRIOD
+#endif // ECAS_PLATFORM_ANDRIOD
 
-namespace dlas {
+namespace ecas {
 namespace util {
 
 Logger::Logger() {
@@ -20,20 +20,20 @@ Logger::~Logger() {
 }
 
 void Logger::GenerateLogMessage(const char *fname, int line, int severity) {
-#ifdef DLAS_PLATFORM_ANDRIOD
+#ifdef ECAS_PLATFORM_ANDRIOD
     if (severity == LogLevel::ERROR)
-        __android_log_print(ANDROID_LOG_ERROR, "com.dlas", "[%s:%d] %s", fname, line, buffer_);
+        __android_log_print(ANDROID_LOG_ERROR, "com.ecas", "[%s:%d] %s", fname, line, buffer_);
     else if (severity == LogLevel::WARNING)
-        __android_log_print(ANDROID_LOG_INFO, "com.dlas", "[%s:%d] %s", fname, line, buffer_);
+        __android_log_print(ANDROID_LOG_INFO, "com.ecas", "[%s:%d] %s", fname, line, buffer_);
     else
-        __android_log_print(ANDROID_LOG_INFO, "com.dlas", "[%s:%d] %s", fname, line, buffer_);
+        __android_log_print(ANDROID_LOG_INFO, "com.ecas", "[%s:%d] %s", fname, line, buffer_);
 #else
     if (severity != LogLevel::INFO_SIMPLE) {
         fprintf(stderr, "<%c>", "IIWE"[severity]);
         fprintf(stderr, " %s:%d] ", fname, line);        
     }
     fprintf(stderr, "%s", buffer_);
-#endif // DLAS_PLATFORM_ANDRIOD
+#endif // ECAS_PLATFORM_ANDRIOD
 
     if (severity == LogLevel::ERROR)
         std::abort();
@@ -42,4 +42,4 @@ void Logger::GenerateLogMessage(const char *fname, int line, int severity) {
 int Logger::min_log_level_ = LogLevel::INFO_SIMPLE;
 
 } // util
-} // dlas
+} // ecas

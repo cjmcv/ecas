@@ -6,7 +6,7 @@
 #include "topology.hpp"
 #include "util/logger.hpp"
 
-namespace dlas {
+namespace ecas {
 
 Topology::Topology() {}
 
@@ -30,7 +30,7 @@ void Topology::Build(std::map<std::string, Node*> &nodes, std::vector<std::vecto
             if(nodes_iter != nodes.end())
                 target = nodes_iter->second;
             else
-                DLAS_LOGE("Can not find node named %s .\n", relation[i][j-1].c_str());
+                ECAS_LOGE("Can not find node named %s .\n", relation[i][j-1].c_str());
             
             // Find the output node of the target.
             Node *n_out = nullptr;
@@ -38,7 +38,7 @@ void Topology::Build(std::map<std::string, Node*> &nodes, std::vector<std::vecto
             if(nodes_iter != nodes.end())
                 n_out = nodes_iter->second;
             else
-                DLAS_LOGE("Can not find node named %s .\n", relation[i][j].c_str());
+                ECAS_LOGE("Can not find node named %s .\n", relation[i][j].c_str());
 
             // Set output.
             io_iter = output_map_.find(target);
@@ -81,4 +81,4 @@ std::vector<Node*> *Topology::GetInputs(Node *node) {
         return nullptr;
 }
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

@@ -17,28 +17,28 @@ file(GLOB_RECURSE SRC_LIST
 )
 message(STATUS "src: ${SRC_LIST}")
 
-set(DLAS_OBJECTS_TO_LINK "")
-set(DLAS_LIBS_TO_LINK "")
+set(ECAS_OBJECTS_TO_LINK "")
+set(ECAS_LIBS_TO_LINK "")
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/generic)
-list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_GENERIC>)
+list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_GENERIC>)
 
-if (DLAS_GPU_USE_VULKAN)
+if (ECAS_GPU_USE_VULKAN)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/vulkan)
-    list(APPEND DLAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:DLAS_VULKAN>)
+    list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_VULKAN>)
     if (VULKAN_WIN_SDK) # for windows x86 sdk
-        list(APPEND DLAS_LIBS_TO_LINK ${VULKAN_WIN_SDK}/Lib/vulkan-1.lib)
+        list(APPEND ECAS_LIBS_TO_LINK ${VULKAN_WIN_SDK}/Lib/vulkan-1.lib)
         message(STATUS "VULKAN_WIN_SDK: ${VULKAN_WIN_SDK}")
     else()
-        list(APPEND DLAS_LIBS_TO_LINK -lvulkan)
+        list(APPEND ECAS_LIBS_TO_LINK -lvulkan)
     endif()
 endif()
 
-add_library(${PROJECT_NAME} STATIC ${DLAS_OBJECTS_TO_LINK} ${SRC_LIST})  #SHARED
-target_link_libraries(${PROJECT_NAME} ${DLAS_LIBS_TO_LINK})
-message(STATUS "DLAS_LIBS_TO_LINK: ${DLAS_LIBS_TO_LINK}")
+add_library(${PROJECT_NAME} STATIC ${ECAS_OBJECTS_TO_LINK} ${SRC_LIST})  #SHARED
+target_link_libraries(${PROJECT_NAME} ${ECAS_LIBS_TO_LINK})
+message(STATUS "ECAS_LIBS_TO_LINK: ${ECAS_LIBS_TO_LINK}")
 
-set_target_properties(${PROJECT_NAME} PROPERTIES output_name "dlas") 
+set_target_properties(${PROJECT_NAME} PROPERTIES output_name "ecas") 
 
 # Set output path
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR})

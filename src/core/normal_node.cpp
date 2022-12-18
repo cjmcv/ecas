@@ -4,7 +4,7 @@
 
 #include "normal_node.hpp"
 
-namespace dlas {
+namespace ecas {
 
 void TaskB(void *in, void *out) {
     printf("TaskB.\n");
@@ -20,4 +20,4 @@ NormalNode::~NormalNode() {
 }
 
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

@@ -2,13 +2,13 @@
 * \brief timer.
 */
 
-#ifndef DLAS_UTIL_TIMER_HPP_
-#define DLAS_UTIL_TIMER_HPP_
+#ifndef ECAS_UTIL_TIMER_HPP_
+#define ECAS_UTIL_TIMER_HPP_
 
 #include <iostream>
 #include <chrono>
 
-namespace dlas {
+namespace ecas {
 namespace util {
 
 // Timer for cpu.
@@ -68,7 +68,7 @@ private:
 //  auto func = [&]()
 //  -> float {
 //    timer.Start();
-//    dlas::QueryDevices();
+//    ecas::QueryDevices();
 //    timer.Stop();
 //    return timer.MilliSeconds();
 //  };
@@ -81,5 +81,5 @@ private:
     }();
 
 } // util.
-} // dlas.
-#endif //DLAS_UTIL_TIMER_HPP_
+} // ecas.
+#endif //ECAS_UTIL_TIMER_HPP_

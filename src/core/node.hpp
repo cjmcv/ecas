@@ -2,13 +2,13 @@
 * \brief Compute node.
 */
 
-#ifndef DLAS_CORE_NODE_HPP_
-#define DLAS_CORE_NODE_HPP_
+#ifndef ECAS_CORE_NODE_HPP_
+#define ECAS_CORE_NODE_HPP_
 
 #include <string>
-#include "dlas/dlas.hpp"
+#include "ecas/ecas.hpp"
 
-namespace dlas {
+namespace ecas {
 
 // TODO: 内存管理，内存复用在其内部接allocator
 class Tensor;
@@ -37,6 +37,6 @@ protected:
     std::vector<Node *> *output_nodes_;
 };
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.
 
-#endif //DLAS_CORE_NODE_HPP_
+#endif //ECAS_CORE_NODE_HPP_

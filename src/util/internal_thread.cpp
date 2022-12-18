@@ -6,7 +6,7 @@
 #include "internal_thread.hpp"
 #include "logger.hpp"
 
-namespace dlas {
+namespace ecas {
 namespace util {
 
 bool InternalThread::IsMustStop() {
@@ -19,14 +19,14 @@ bool InternalThread::IsMustStop() {
 
 bool InternalThread::Start() {
     if (is_started()) {
-        DLAS_LOGE("Threads should persist and not be restarted.");
+        ECAS_LOGE("Threads should persist and not be restarted.");
         return false;
     }
     try {
         thread_.reset(new std::thread(&InternalThread::Entry, this));
     }
     catch (std::exception& e) {
-        DLAS_LOGE("Thread exception: %s", e.what());
+        ECAS_LOGE("Thread exception: %s", e.what());
     }
     return true;
 }
@@ -39,11 +39,11 @@ void InternalThread::Stop() {
             thread_->join();
         }
         catch (std::exception& e) {
-            DLAS_LOGE("Thread exception: %s", e.what());
+            ECAS_LOGE("Thread exception: %s", e.what());
         }
     }
 }
 
 } // namespace util
-} // namespace dlas
+} // namespace ecas
 

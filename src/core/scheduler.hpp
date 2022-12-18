@@ -3,8 +3,8 @@
 *        提供节点的调度方案
 */
 
-#ifndef DLAS_CORE_SCHEDULER_HPP_
-#define DLAS_CORE_SCHEDULER_HPP_
+#ifndef ECAS_CORE_SCHEDULER_HPP_
+#define ECAS_CORE_SCHEDULER_HPP_
 
 #include <string>
 #include <vector>
@@ -13,7 +13,7 @@
 #include "node.hpp"
 #include "util/logger.hpp"
 
-namespace dlas {
+namespace ecas {
 
 class Scheduler {
 
@@ -29,9 +29,13 @@ public:
     void ShowGroups();
 
 private:
+    /// Serial Execution
+    std::vector<Node *> bfs_nodes_;
+
+    /// Parallel execution
     std::vector<std::vector<Node *>> groups_;
 };
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.
 
-#endif // DLAS_CORE_SCHEDULER_HPP_
+#endif // ECAS_CORE_SCHEDULER_HPP_

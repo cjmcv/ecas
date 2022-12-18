@@ -4,7 +4,7 @@
 
 #include "node.hpp"
 
-namespace dlas {
+namespace ecas {
 
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

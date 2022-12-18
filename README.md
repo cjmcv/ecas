@@ -1,1 +1,1 @@
-# DLAS - Deep Learning Acceleration Subprograms
+# ECAS - Edge AI Computing Acceleration Subprograms

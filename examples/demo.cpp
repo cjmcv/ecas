@@ -1,4 +1,4 @@
-#include "dlas/dlas.hpp"
+#include "ecas/ecas.hpp"
 
 void TaskA(void *in, void *out) {
     printf("TaskA.\n");
@@ -11,13 +11,13 @@ void TaskC(void *in, void *out) {
 }
 
 int main() {
-    dlas::HelloWorld();
-    dlas::VulkanHelloWorld();
+    ecas::HelloWorld();
+    ecas::VulkanHelloWorld();
     
-    dlas::SessionConfig config;
-    config.mode = dlas::ExecutionMode::SINGLE;
+    ecas::SessionConfig config;
+    config.mode = ecas::ExecutionMode::SINGLE;
     config.num_thread = 1;
-    dlas::Session *session = new dlas::Session("s1", config);
+    ecas::Session *session = new ecas::Session("s1", config);
 
     session->CreateNode("n1", TaskA);
     session->CreateNode("n2", TaskB);
@@ -30,12 +30,12 @@ int main() {
 
     // session->GetNodeIO("n1", Tenosr *in, Tensor *out);
 
-    dlas::ITensor in;
+    ecas::ITensor in;
     in.data = (char *)malloc(sizeof(float) * 2);
     float *a = (float *)in.data;
     a[0] = 1; a[1] = 2;
     session->Feed(in);
-    dlas::ITensor *out;
+    ecas::ITensor *out;
     session->GetResult(&out);
 
     return 0;

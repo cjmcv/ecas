@@ -3,14 +3,14 @@
 *        Mainly implemented by thread.
 */
 
-#ifndef DLAS_UTIL_INTERNAL_THREAD_HPP_
-#define DLAS_UTIL_INTERNAL_THREAD_HPP_
+#ifndef ECAS_UTIL_INTERNAL_THREAD_HPP_
+#define ECAS_UTIL_INTERNAL_THREAD_HPP_
 
 #include <memory>
 #include <thread>
 #include <thread>
 
-namespace dlas {
+namespace ecas {
 namespace util {
 
 class InternalThread {
@@ -36,6 +36,6 @@ private:
 };
 
 } // namespace util
-} // namespace dlas
+} // namespace ecas
 
-#endif // DLAS_UTIL_INTERNAL_THREAD_HPP_
+#endif // ECAS_UTIL_INTERNAL_THREAD_HPP_

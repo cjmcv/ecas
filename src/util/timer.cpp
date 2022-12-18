@@ -5,7 +5,7 @@
 #include "timer.hpp"
 #include <float.h>
 
-namespace dlas {
+namespace ecas {
 namespace util {
 
 Timer::Timer(std::string name) :
@@ -36,4 +36,4 @@ void Timer::Stop() {
 bool Timer::is_record_ = false;
 
 } // util.
-} // dlas.
+} // ecas.

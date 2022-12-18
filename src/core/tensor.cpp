@@ -4,7 +4,7 @@
 
 #include "tensor.hpp"
 
-namespace dlas {
+namespace ecas {
 
 Tensor::Tensor(std::vector<unsigned int> &shape) {
     size_ = 1;
@@ -22,4 +22,4 @@ Tensor::~Tensor() {
     delete buffer_;
 }
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

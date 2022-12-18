@@ -2,14 +2,14 @@
 * \brief Topology.
 */
 
-#ifndef DLAS_CORE_TOPOLOGY_NODE_HPP_
-#define DLAS_CORE_TOPOLOGY_NODE_HPP_
+#ifndef ECAS_CORE_TOPOLOGY_NODE_HPP_
+#define ECAS_CORE_TOPOLOGY_NODE_HPP_
 
 #include <string>
 #include <vector>
 #include <map>
 
-namespace dlas {
+namespace ecas {
 
 class Node;
 
@@ -29,6 +29,6 @@ private:
     std::map<Node*, std::vector<Node*>> input_map_;
 };
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.
 
-#endif //DLAS_CORE_TOPOLOGY_NODE_HPP_
+#endif //ECAS_CORE_TOPOLOGY_NODE_HPP_

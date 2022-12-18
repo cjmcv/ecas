@@ -4,7 +4,7 @@
 
 #include "buffer.hpp"
 
-namespace dlas {
+namespace ecas {
 
 Buffer::Buffer(unsigned int size) {
     data_ = malloc(size);
@@ -14,4 +14,4 @@ Buffer::~Buffer() {
     free(data_);
 }
 
-}  // end of namespace dlas.
+}  // end of namespace ecas.

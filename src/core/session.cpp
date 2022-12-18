@@ -8,7 +8,7 @@
 //       对外提供的单函数，通过session实例进行绑定，session统一资源管理
 //       
 
-#include "dlas/dlas.hpp"
+#include "ecas/ecas.hpp"
 
 #include <iostream>
 #include <vector>
@@ -21,7 +21,7 @@
 #include "topology.hpp"
 #include "scheduler.hpp"
 
-namespace dlas {
+namespace ecas {
 
 struct SessionParams {
     std::string name;
@@ -116,12 +116,12 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
         }
         else if (iter->second->input_nodes() == nullptr) {
             if (p->input_node != nullptr) 
-                DLAS_LOGE("Only one input node is allowed.\n");
+                ECAS_LOGE("Only one input node is allowed.\n");
             p->input_node = iter->second;
         }
         else if (iter->second->output_nodes() == nullptr) {
             if (p->output_node != nullptr) 
-                DLAS_LOGE("Only one output node is allowed.\n");
+                ECAS_LOGE("Only one output node is allowed.\n");
             p->output_node = iter->second;
         }
     }
@@ -137,41 +137,41 @@ void Session::Group(std::vector<std::vector<std::string>> &&groups) {
 void Session::ShowInfo() {
     SessionParams *p = (SessionParams *)params_;
 
-    DLAS_LOGS("\n>>>>>>>>> Session ShowInfo >>>>>>>>>\n");
-    DLAS_LOGS("Session: %s.\n", p->name.c_str());
-    DLAS_LOGS("Input node: %s.\n", p->input_node->name().c_str());
-    DLAS_LOGS("Output node: %s.\n", p->output_node->name().c_str());
-    DLAS_LOGS("\n");
+    ECAS_LOGS("\n>>>>>>>>> Session ShowInfo >>>>>>>>>\n");
+    ECAS_LOGS("Session: %s.\n", p->name.c_str());
+    ECAS_LOGS("Input node: %s.\n", p->input_node->name().c_str());
+    ECAS_LOGS("Output node: %s.\n", p->output_node->name().c_str());
+    ECAS_LOGS("\n");
     //
     std::map<std::string, Node*>::iterator iter;
     for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
         Node *n = iter->second;
         std::vector<Node *> *ins = n->input_nodes();
         std::vector<Node *> *outs = n->output_nodes();
-        DLAS_LOGS("node: %s (%d) -> in: [", n->name().c_str(), n);
+        ECAS_LOGS("node: %s (%d) -> in: [", n->name().c_str(), n);
         if (ins != nullptr) {
             for(int i=0; i<ins->size(); i++) {
-                DLAS_LOGS("%s", (*ins)[i]->name().c_str());
-                if (i != ins->size() - 1) DLAS_LOGS(", ");
+                ECAS_LOGS("%s", (*ins)[i]->name().c_str());
+                if (i != ins->size() - 1) ECAS_LOGS(", ");
             }
         }
-        DLAS_LOGS("], out: [");
+        ECAS_LOGS("], out: [");
         if (outs != nullptr) {
             for(int i=0; i<outs->size(); i++) {
-                DLAS_LOGS("%s", (*outs)[i]->name().c_str());
-                if (i != outs->size() - 1) DLAS_LOGS(", ");
+                ECAS_LOGS("%s", (*outs)[i]->name().c_str());
+                if (i != outs->size() - 1) ECAS_LOGS(", ");
             }
         }
-        DLAS_LOGS("].\n");
+        ECAS_LOGS("].\n");
     }
-    DLAS_LOGS("\n");
+    ECAS_LOGS("\n");
     p->scheduler.ShowGroups();
-    DLAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
+    ECAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 }
 
 void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
-    DLAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
+    ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
 
     p->scheduler.BfsExecute(p->input_node, &in);
 }
@@ -180,4 +180,4 @@ void Session::GetResult(ITensor **out) {
     
 }
 
-} // dlas.
+} // ecas.
