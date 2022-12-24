@@ -35,6 +35,9 @@ protected:
 
     std::vector<Node *> *input_nodes_;
     std::vector<Node *> *output_nodes_;
+
+    std::vector<std::vector<int>> input_shapes_;
+    std::vector<std::vector<int>> output_shapes_;
 };
 
 }  // end of namespace ecas.

@@ -19,9 +19,9 @@ int main() {
     config.num_thread = 1;
     ecas::Session *session = new ecas::Session("s1", config);
 
-    session->CreateNode("n1", TaskA);
-    session->CreateNode("n2", TaskB);
-    session->CreateNode("n3", TaskC);
+    session->CreateNode("n1", TaskA, {{2}}, {{2, 2}});
+    session->CreateNode("n2", TaskB, {{2, 2}}, {{2, 3}});
+    session->CreateNode("n3", TaskC, {{2, 3}}, {{2}});
 
     session->CreateNode("n4", {{"n1", "n2"}, {"n2", "n3"}});
     session->BuildGraph({{"n1", "n2"}, {"n2", "n3"}});

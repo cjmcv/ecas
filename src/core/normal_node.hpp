@@ -13,7 +13,9 @@ namespace ecas {
 class NormalNode: public Node {
     
 public:
-    NormalNode(const std::string &name, Task &&c);
+    NormalNode(const std::string &name, Task &&task,
+               std::vector<std::vector<int>> &input_shapes,
+               std::vector<std::vector<int>> &output_shapes);
     ~NormalNode();
 
     virtual void Run(ITensor *input, ITensor *output) { task_(input, output); }

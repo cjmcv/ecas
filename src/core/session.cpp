@@ -83,9 +83,12 @@ Session::~Session() {
     delete (SessionParams *)params_;
 }
 
-void Session::CreateNode(const std::string &name, Task &&task) {
+void Session::CreateNode(const std::string &name, Task &&task, 
+                         std::vector<std::vector<int>> &&input_shapes, 
+                         std::vector<std::vector<int>> &&output_shapes) {
     SessionParams *p = (SessionParams *)params_;
-    p->nodes.insert(std::make_pair(name, new NormalNode(name, std::forward<Task>(task))));
+    Node *n = new NormalNode(name, std::forward<Task>(task), input_shapes, output_shapes);
+    p->nodes.insert(std::make_pair(name, n));
 }
 void Session::CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation) {
     SessionParams *p = (SessionParams *)params_;
@@ -172,7 +175,7 @@ void Session::ShowInfo() {
 void Session::Start() {
     SessionParams *p = (SessionParams *)params_;
     // Prepare input and output memory for tasks.
-    p->scheduler.SetupIoBuffer();
+    p->scheduler.SetupTensors();
     // Start all task threads.
     p->scheduler.TasksSpawn();
 }

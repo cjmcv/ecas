@@ -48,8 +48,9 @@ public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
 
-    void CreateNode(const std::string &name, OpTag op_tag);
-    void CreateNode(const std::string &name, Task &&task);
+    void CreateNode(const std::string &name, Task &&task, 
+                    std::vector<std::vector<int>> &&in_shapes, 
+                    std::vector<std::vector<int>> &&out_shapes);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
 
     void BuildGraph(std::vector<std::vector<std::string>> &&relation);

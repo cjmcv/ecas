@@ -1,6 +1,6 @@
 /*!
 * \brief Scheduler. 
-*        提供节点的调度方案
+*        提供节点的调度方案, 多线程管理，包含多线程间数据内存交互
 */
 
 #ifndef ECAS_CORE_SCHEDULER_HPP_
@@ -12,6 +12,7 @@
 #include <map>
 
 #include "node.hpp"
+#include "tensor_pool.hpp"
 #include "util/blocking_queue.hpp"
 #include "util/logger.hpp"
 
@@ -21,7 +22,12 @@ class Scheduler {
 
 public:
     Scheduler();
-    ~Scheduler() {};
+    ~Scheduler();
+
+    ////////////////////////
+    /// Tensors management
+    // Setup tensors for cross node interaction.
+    void SetupTensors();
 
     ////////////////////////
     /// Serial Execution
@@ -31,7 +37,6 @@ public:
 
     ////////////////////////
     /// Parallel execution
-    void SetupIoBuffer();
     // Group nodes, and each group uses one thread.
     void BuildGroup(std::map<std::string, Node*> &nodes, 
                     std::vector<std::vector<std::string>> &&groups);
@@ -51,8 +56,8 @@ private:
     bool is_stop_;
 
     // //
-    // BlockingQueue<Tensor *> outs_free_;
-    // BlockingQueue<Tensor *> *outs_full_;
+    TensorPool *tensor_pool_;
+    bool is_tensor_setup_;
 };
 
 }  // end of namespace ecas.

@@ -11,9 +11,36 @@ namespace ecas {
 
 Scheduler::Scheduler() {
     is_stop_ = false;
+    groups_.clear();
+    tensor_pool_ = new TensorPool;
+    is_tensor_setup_ = false;
 }
 
+Scheduler::~Scheduler() {
+    delete tensor_pool_;
+    is_tensor_setup_ = false;
+}
+
+////////////////////////
+/// Tensors management
+void Scheduler::SetupTensors() {
+    if (groups_.size() <= 1) {
+        // Single thread.
+        // 节点输出和其输出节点的输入用同一个Tensor
+    }
+    else {
+        // Multiple threads.
+        // 节点输出和其输出节点的输入用同一组BlockingQueue
+    }
+    is_tensor_setup_ = true;
+}
+
+////////////////////////
+/// Serial Execution
 void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
+    if (!is_tensor_setup_) {
+        ECAS_LOGE("TasksSpawn -> please call function SetupTensors first.\n");
+    }
     std::queue<Node *> tasks;
     tasks.push(input_node);
     while (!tasks.empty()) {
@@ -31,10 +58,8 @@ void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
     }
 }
 
-void Scheduler::SetupIoBuffer() {
-    
-}
-
+////////////////////////
+/// Parallel execution
 void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes, 
                            std::vector<std::vector<std::string>> &&groups) {
     groups_.resize(groups.size());
@@ -65,6 +90,9 @@ void Scheduler::ShowGroups() {
 void Scheduler::TasksSpawn() {
     if (groups_.size() == 0) {
         ECAS_LOGE("TasksSpawn -> groups_.size() == 0, please call function BuildGraph first.\n");
+    }
+    if (!is_tensor_setup_) {
+        ECAS_LOGE("TasksSpawn -> please call function SetupTensors first.\n");
     }
 
     std::vector<std::vector<Node *>> &groups = groups_;
