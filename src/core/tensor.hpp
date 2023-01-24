@@ -17,11 +17,11 @@ namespace ecas {
 class Tensor {
 
 public:
-    Tensor(std::vector<unsigned int> &shape);
+    Tensor(std::vector<unsigned int> &shape, int id = -1);
     ~Tensor();
 
 private:
-    // dimension.
+    int id_;
     int size_;
     std::vector<unsigned int> shape_;
     Buffer *buffer_;

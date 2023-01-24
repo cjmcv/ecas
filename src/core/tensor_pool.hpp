@@ -11,24 +11,21 @@
 
 namespace ecas {
 
-struct TensorPack {
-    int id;
-    Tensor *tensor;
-};
-
 struct BlockingQueuePair {
-    util::BlockingQueue<TensorPack *> free_;
-    util::BlockingQueue<TensorPack *> full_;
+    util::BlockingQueue<Tensor *> free_;
+    util::BlockingQueue<Tensor *> full_;
 };
 
 class TensorPool {
 public:
-    void GenerateBlockingQueuePair() {
+    void CreateBlockingQueuePair() {
 
     }
+    Tensor *CreateTensor(std::vector<unsigned int> &shape);
 
 private:
-    
+    std::vector<BlockingQueuePair *> queue_pairs_;
+    std::vector<Tensor *> tensors_;
 };
 
 }  // end of namespace ecas.

@@ -29,6 +29,9 @@ public:
     inline std::vector<Node *> *input_nodes() { return input_nodes_; }
     inline std::vector<Node *> *output_nodes() { return output_nodes_; }
 
+    inline std::vector<std::vector<int>> &input_shapes() { return input_shapes_; }
+    inline std::vector<std::vector<int>> &output_shapes() { return output_shapes_; }
+
 protected:
     std::string name_;
     OpTag op_tag_;

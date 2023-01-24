@@ -21,16 +21,67 @@ Scheduler::~Scheduler() {
     is_tensor_setup_ = false;
 }
 
+void Scheduler::MarkGroupId(Node *node, int group_id) {
+    static int init_size = 10;
+    if (groups_temp_.size() != init_size) {
+        groups_temp_.resize(init_size);
+    }
+    if (group_id > groups_temp_.size()) {
+        ECAS_LOGE("group_id should be smaller than %d.\n", groups_temp_.size());
+    }
+    groups_temp_[group_id].push_back(node);
+}
+
+void Scheduler::UpdateGroups() {
+    groups_.clear();
+    for (int i=0; i<groups_temp_.size(); i++) {
+        if (groups_temp_[i].size() == 0)
+            continue;
+        groups_.push_back(groups_temp_[i]);
+    }
+}
+
 ////////////////////////
 /// Tensors management
+bool Scheduler::CheckShapes() {
+    // Check whether the shapes match.
+    // 注意：一节点每个输入必须各对应一个节点，每个输出也必须各对应一个节点。
+    // std::vector<std::vector<int>> out_shapes = target.output_shapes();
+    // n_out.input_shapes();
+    for (int i = 0; i < groups_.size(); i++) {
+        for (int j = 0; j < groups_[i].size(); j++) {
+            Node *n = (Node *)groups_[i][j];
+            std::vector<std::vector<int>> output_shapes = n->output_shapes();
+            std::vector<Node *> *output_nodes = n->output_nodes();
+
+            if (output_nodes != nullptr && output_nodes->size() != output_shapes.size())
+                ECAS_LOGE("CheckShapes -> output_nodes->size() != output_shapes.size(): %d vs %d.\n", 
+                          output_nodes->size(), output_shapes.size());
+
+            for (int si=0; si<output_shapes.size(); si++) {
+                // output_shapes[si];
+            }
+        }
+        ECAS_LOGS("\n");
+    }
+    return true;
+}
+
 void Scheduler::SetupTensors() {
+    CheckShapes();
     if (groups_.size() <= 1) {
         // Single thread.
-        // 节点输出和其输出节点的输入用同一个Tensor
+        // The output of the node and the input of its output node 
+        // use the same Tensor.
+
+        // Check shapes.
+        
+        // tensor_pool_.CreateTensor();
     }
     else {
         // Multiple threads.
-        // 节点输出和其输出节点的输入用同一组BlockingQueue
+        // The output of the node and the input of its output node 
+        // use the same BlockingQueue.
     }
     is_tensor_setup_ = true;
 }
@@ -62,6 +113,7 @@ void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
 /// Parallel execution
 void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes, 
                            std::vector<std::vector<std::string>> &&groups) {
+    // groups_[group_id][node_ptr]
     groups_.resize(groups.size());
     for (int i = 0; i < groups.size(); i++) {
         groups_[i].resize(groups[i].size());
@@ -78,10 +130,15 @@ void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes,
 }
     
 void Scheduler::ShowGroups() {
+    ECAS_LOGS("Groups: \n");
     for (int i = 0; i < groups_.size(); i++) {
-        ECAS_LOGS("group: %d, ", i);
+        if (groups_[i].size() == 0)
+            ECAS_LOGE("ShowGroups -> groups_[%d].size() == 0.\n", i)
+
+        ECAS_LOGS("%d -> ", i);
         for (int j = 0; j < groups_[i].size(); j++) {
-            ECAS_LOGS("%d, ", groups_[i][j]);
+            ECAS_LOGS("%s (%d)", ((Node *)groups_[i][j])->name().c_str(), groups_[i][j]);
+            if (j != groups_[i].size() - 1) ECAS_LOGS(", ");
         }
         ECAS_LOGS("\n");
     }

@@ -6,7 +6,8 @@
 
 namespace ecas {
 
-Tensor::Tensor(std::vector<unsigned int> &shape) {
+Tensor::Tensor(std::vector<unsigned int> &shape, int id) {
+    id_ = id;
     size_ = 1;
     for (int i=0; i < shape.size(); i++) {
         size_ *= shape[i];

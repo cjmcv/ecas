@@ -85,9 +85,12 @@ Session::~Session() {
 
 void Session::CreateNode(const std::string &name, Task &&task, 
                          std::vector<std::vector<int>> &&input_shapes, 
-                         std::vector<std::vector<int>> &&output_shapes) {
+                         std::vector<std::vector<int>> &&output_shapes, 
+                         int group_id) {
     SessionParams *p = (SessionParams *)params_;
     Node *n = new NormalNode(name, std::forward<Task>(task), input_shapes, output_shapes);
+
+    p->scheduler.MarkGroupId(n, group_id);
     p->nodes.insert(std::make_pair(name, n));
 }
 void Session::CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation) {
@@ -108,6 +111,7 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
         std::vector<Node*> *outputs = p->topo.GetOutputs(iter->second);
         iter->second->SetOutputNodes(outputs);
     }
+
     // Find the graph IO nodes according to the number of inputs and outputs.
     // Input node of the graph: no input.
     // Output node of the graph: no output.
@@ -128,8 +132,11 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
             p->output_node = iter->second;
         }
     }
-    // 
-    // p->scheduler.PrepareIoBuffer();
+
+    // Group nodes.
+    p->scheduler.UpdateGroups();
+    // Prepare input and output memory for nodes.
+    p->scheduler.SetupTensors();
 }
 
 void Session::Group(std::vector<std::vector<std::string>> &&groups) {
@@ -144,14 +151,40 @@ void Session::ShowInfo() {
     ECAS_LOGS("Session: %s.\n", p->name.c_str());
     ECAS_LOGS("Input node: %s.\n", p->input_node->name().c_str());
     ECAS_LOGS("Output node: %s.\n", p->output_node->name().c_str());
-    ECAS_LOGS("\n");
-    //
+
     std::map<std::string, Node*>::iterator iter;
     for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
         Node *n = iter->second;
         std::vector<Node *> *ins = n->input_nodes();
         std::vector<Node *> *outs = n->output_nodes();
         ECAS_LOGS("node: %s (%d) -> in: [", n->name().c_str(), n);
+        for (int i = 0; i<n->input_shapes().size(); i++) {
+            ECAS_LOGS("(");
+            for (int j=0; j<n->input_shapes()[i].size(); j++) {
+                ECAS_LOGS("%d", n->input_shapes()[i][j]);
+                if (j != n->input_shapes()[i].size() - 1) ECAS_LOGS(",");
+            }
+            ECAS_LOGS(")");
+        }
+        ECAS_LOGS("], out: [");
+        for (int i = 0; i<n->output_shapes().size(); i++) {
+            ECAS_LOGS("(");
+            for (int j=0; j<n->output_shapes()[i].size(); j++) {
+                ECAS_LOGS("%d", n->output_shapes()[i][j]);
+                if (j != n->output_shapes()[i].size() - 1) ECAS_LOGS(",");
+            }
+            ECAS_LOGS(")");
+        }
+        ECAS_LOGS("]\n");
+    }
+    ECAS_LOGS("\n");
+    //
+    ECAS_LOGS("Node Relationship: \n");
+    for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
+        Node *n = iter->second;
+        std::vector<Node *> *ins = n->input_nodes();
+        std::vector<Node *> *outs = n->output_nodes();
+        ECAS_LOGS("%s -> in: [", n->name().c_str());
         if (ins != nullptr) {
             for(int i=0; i<ins->size(); i++) {
                 ECAS_LOGS("%s", (*ins)[i]->name().c_str());
@@ -168,22 +201,26 @@ void Session::ShowInfo() {
         ECAS_LOGS("].\n");
     }
     ECAS_LOGS("\n");
+    //
     p->scheduler.ShowGroups();
     ECAS_LOGS(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 }
 
 void Session::Start() {
     SessionParams *p = (SessionParams *)params_;
-    // Prepare input and output memory for tasks.
-    p->scheduler.SetupTensors();
-    // Start all task threads.
-    p->scheduler.TasksSpawn();
+    // Start all task threads if necessary.
+    if (p->scheduler.group_size() > 0) {
+        p->scheduler.TasksSpawn();        
+    }
 }
 
-void Session::Stop() {
+void Session::Stop() {        
     SessionParams *p = (SessionParams *)params_;
-    p->scheduler.TasksStop();
-    p->scheduler.TasksJoin();
+    // Stop all task threads if necessary.
+    if (p->scheduler.group_size() > 0) {
+        p->scheduler.TasksStop();
+        p->scheduler.TasksJoin();
+    }
 }
 
 void Session::Feed(ITensor &in) {

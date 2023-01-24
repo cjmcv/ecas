@@ -25,6 +25,7 @@ public:
     void Show();
 
 private:
+    // <target, the outputs/inputs of the target>
     std::map<Node*, std::vector<Node*>> output_map_;
     std::map<Node*, std::vector<Node*>> input_map_;
 };

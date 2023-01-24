@@ -19,13 +19,16 @@ int main() {
     config.num_thread = 1;
     ecas::Session *session = new ecas::Session("s1", config);
 
-    session->CreateNode("n1", TaskA, {{2}}, {{2, 2}});
-    session->CreateNode("n2", TaskB, {{2, 2}}, {{2, 3}});
-    session->CreateNode("n3", TaskC, {{2, 3}}, {{2}});
+    // TODO: 将group id放到CreateNode中直接设定，取消Group函数。在buildgraph时进行group的创建，完成group函数的功能。
+    //       BuildGraph后将完成group的确认和tensor/Blockingqueue的分配。
+    session->CreateNode("n1", TaskA, {{2}}, {{2, 2}}, 0);
+    session->CreateNode("n2", TaskB, {{2, 2}}, {{2, 3}}, 1);
+    session->CreateNode("n3", TaskC, {{2, 3}}, {{2}}, 0);
 
     session->CreateNode("n4", {{"n1", "n2"}, {"n2", "n3"}});
     session->BuildGraph({{"n1", "n2"}, {"n2", "n3"}});
-    session->Group({{"n1"}, {"n2", "n3"}});
+    // session->Group({{"n1"}, {"n2", "n3"}});
+    // session->Group({{"n1", "n2", "n3"}});
     session->ShowInfo();
 
     // session->GetNodeIO("n1", Tenosr *in, Tensor *out);
@@ -37,6 +40,7 @@ int main() {
 
     session->Start();
     session->Feed(in);
+    printf("Finish Feed.\n");
     ecas::ITensor *out;
     session->GetResult(&out);
     session->Stop();

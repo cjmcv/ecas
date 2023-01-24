@@ -50,10 +50,13 @@ public:
 
     void CreateNode(const std::string &name, Task &&task, 
                     std::vector<std::vector<int>> &&in_shapes, 
-                    std::vector<std::vector<int>> &&out_shapes);
+                    std::vector<std::vector<int>> &&out_shapes,
+                    int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
 
     void BuildGraph(std::vector<std::vector<std::string>> &&relation);
+    // Group nodes.
+    // It will determine the thread allocation scheme.
     void Group(std::vector<std::vector<std::string>> &&groups);
 
     void ShowInfo();
@@ -61,7 +64,9 @@ public:
     void Start();
     void Stop();
 
+    // Asynchronous function.
     void Feed(ITensor &in);
+    // Get the result after calling the Feed.
     void GetResult(ITensor **out);
 
 private:

@@ -24,8 +24,12 @@ public:
     Scheduler();
     ~Scheduler();
 
+    void MarkGroupId(Node *node, int group_id);
+    void UpdateGroups();
+    
     ////////////////////////
     /// Tensors management
+    bool CheckShapes();
     // Setup tensors for cross node interaction.
     void SetupTensors();
 
@@ -41,6 +45,7 @@ public:
     void BuildGroup(std::map<std::string, Node*> &nodes, 
                     std::vector<std::vector<std::string>> &&groups);
     void ShowGroups();
+    inline int group_size() { return groups_.size(); }
     // inline std::vector<std::vector<Node *>> &group_nodes() { return groups_; };
     void TasksSpawn();
     void TasksStop();
@@ -51,7 +56,10 @@ private:
     std::vector<Node *> bfs_nodes_;
 
     /// Parallel execution
+    // groups_[group_id][node_ptr]
     std::vector<std::vector<Node *>> groups_;
+    std::vector<std::vector<Node *>> groups_temp_;
+
     std::vector<std::thread> threads_;
     bool is_stop_;
 
