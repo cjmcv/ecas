@@ -9,6 +9,9 @@ void TaskB(void *in, void *out) {
 void TaskC(void *in, void *out) {
     printf("TaskC.\n");
 }
+void TaskD(void *in, void *out) {
+    printf("TaskD.\n");
+}
 
 int main() {
     ecas::HelloWorld();
@@ -19,14 +22,14 @@ int main() {
     config.num_thread = 1;
     ecas::Session *session = new ecas::Session("s1", config);
 
-    // TODO: 将group id放到CreateNode中直接设定，取消Group函数。在buildgraph时进行group的创建，完成group函数的功能。
-    //       BuildGraph后将完成group的确认和tensor/Blockingqueue的分配。
-    session->CreateNode("n1", TaskA, {{2}}, {{2, 2}}, 0);
-    session->CreateNode("n2", TaskB, {{2, 2}}, {{2, 3}}, 1);
-    session->CreateNode("n3", TaskC, {{2, 3}}, {{2}}, 0);
-
-    session->CreateNode("n4", {{"n1", "n2"}, {"n2", "n3"}});
-    session->BuildGraph({{"n1", "n2"}, {"n2", "n3"}});
+    // TODO: BuildGraph后将完成group的确认和tensor/Blockingqueue的分配。
+    session->CreateNode("n1", TaskA, {{2}}, {{2, 2}, {3, 3}}, 0);
+    session->CreateNode("n2", TaskB, {{2, 2}}, {{2, 2}}, 1);
+    session->CreateNode("n3", TaskC, {{3, 3}}, {{3, 3}}, 0);
+    session->CreateNode("n4", TaskD, {{2, 2}, {3, 3}}, {{2}}, 0);
+    session->CreateNode("n5", {{"n1", "n2"}, {"n2", "n3"}});
+    
+    session->BuildGraph({{"n1", "n2"}, {"n1", "n3"}, {"n2", "n4"}, {"n3", "n4"}});
     // session->Group({{"n1"}, {"n2", "n3"}});
     // session->Group({{"n1", "n2", "n3"}});
     session->ShowInfo();

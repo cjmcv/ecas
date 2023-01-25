@@ -13,12 +13,10 @@ Scheduler::Scheduler() {
     is_stop_ = false;
     groups_.clear();
     tensor_pool_ = new TensorPool;
-    is_tensor_setup_ = false;
 }
 
 Scheduler::~Scheduler() {
     delete tensor_pool_;
-    is_tensor_setup_ = false;
 }
 
 void Scheduler::MarkGroupId(Node *node, int group_id) {
@@ -43,55 +41,63 @@ void Scheduler::UpdateGroups() {
 
 ////////////////////////
 /// Tensors management
-bool Scheduler::CheckShapes() {
-    // Check whether the shapes match.
-    // 注意：一节点每个输入必须各对应一个节点，每个输出也必须各对应一个节点。
-    // std::vector<std::vector<int>> out_shapes = target.output_shapes();
-    // n_out.input_shapes();
+void Scheduler::SetupInteractTensors() {
+    // Check whether the shapes match and create tensors for node interaction.
     for (int i = 0; i < groups_.size(); i++) {
         for (int j = 0; j < groups_[i].size(); j++) {
             Node *n = (Node *)groups_[i][j];
             std::vector<std::vector<int>> output_shapes = n->output_shapes();
             std::vector<Node *> *output_nodes = n->output_nodes();
 
-            if (output_nodes != nullptr && output_nodes->size() != output_shapes.size())
-                ECAS_LOGE("CheckShapes -> output_nodes->size() != output_shapes.size(): %d vs %d.\n", 
-                          output_nodes->size(), output_shapes.size());
+            // if output_nodes == nullptr, 
+            // it indicates that it is an output node and does not need to check the output shape.
+            if (output_nodes != nullptr) {
+                // The number of output shapes and output nodes should be the same.
+                if (output_nodes->size() != output_shapes.size())
+                    ECAS_LOGE("SetupInteractTensors -> output_nodes->size() != output_shapes.size(): %d vs %d.\n", 
+                            output_nodes->size(), output_shapes.size());
 
-            for (int si=0; si<output_shapes.size(); si++) {
-                // output_shapes[si];
+                // Check each of output_shapes.
+                for (int si=0; si<output_shapes.size(); si++) {
+                    Node *out_node = (*output_nodes)[si];
+                    std::vector<std::vector<int>> need_match_shapes = out_node->input_shapes();
+
+                    if (need_match_shapes.size() == 1) {
+                        if (need_match_shapes[0] != output_shapes[si]) {
+                            ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n", 
+                                      n->name().c_str(), out_node->name().c_str());                            
+                        }
+                    }
+                    else if (need_match_shapes.size() > 1) {
+                        // TODO: 目前其中一个能匹配就算匹配上了，但实际上看可能会在a+b=>c时，a和b的输出维度一致和c的其中一个输入吻合，c的另一个不吻合，则应该是不匹配的。但目前的策略是会判断为匹配的。
+                        bool is_pass = false;
+                        for (int ni=0; ni<need_match_shapes.size(); ni++) {
+                            if (need_match_shapes[ni] == output_shapes[si])
+                                is_pass = true;
+                        }
+                        if (is_pass == false) {
+                            ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
+                                      n->name().c_str(), out_node->name().c_str());                            
+                        }
+                    }
+                    else {
+                        ECAS_LOGE("SetupInteractTensors -> Shape check failed: need_match_shapes.size() <= 0 \
+                                  (node %s to %s).\n", n->name().c_str(), out_node->name().c_str());
+                    }
+                    BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(output_shapes[si]);
+                    n->AppendOutputs(bqp);
+                    out_node->AppendInputs(bqp);
+                }
             }
         }
         ECAS_LOGS("\n");
     }
-    return true;
-}
-
-void Scheduler::SetupTensors() {
-    CheckShapes();
-    if (groups_.size() <= 1) {
-        // Single thread.
-        // The output of the node and the input of its output node 
-        // use the same Tensor.
-
-        // Check shapes.
-        
-        // tensor_pool_.CreateTensor();
-    }
-    else {
-        // Multiple threads.
-        // The output of the node and the input of its output node 
-        // use the same BlockingQueue.
-    }
-    is_tensor_setup_ = true;
 }
 
 ////////////////////////
 /// Serial Execution
+// TODO: 目前无法处理有环的情况
 void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
-    if (!is_tensor_setup_) {
-        ECAS_LOGE("TasksSpawn -> please call function SetupTensors first.\n");
-    }
     std::queue<Node *> tasks;
     tasks.push(input_node);
     while (!tasks.empty()) {
@@ -128,7 +134,7 @@ void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes,
         }
     }
 }
-    
+
 void Scheduler::ShowGroups() {
     ECAS_LOGS("Groups: \n");
     for (int i = 0; i < groups_.size(); i++) {
@@ -147,9 +153,6 @@ void Scheduler::ShowGroups() {
 void Scheduler::TasksSpawn() {
     if (groups_.size() == 0) {
         ECAS_LOGE("TasksSpawn -> groups_.size() == 0, please call function BuildGraph first.\n");
-    }
-    if (!is_tensor_setup_) {
-        ECAS_LOGE("TasksSpawn -> please call function SetupTensors first.\n");
     }
 
     std::vector<std::vector<Node *>> &groups = groups_;

@@ -11,20 +11,20 @@
 
 namespace ecas {
 
+// TODO: 兼并同步模式，不使用blocking_queue. 提供统一对外的结构体
 struct BlockingQueuePair {
-    util::BlockingQueue<Tensor *> free_;
-    util::BlockingQueue<Tensor *> full_;
+    util::BlockingQueue<Tensor *> free;
+    util::BlockingQueue<Tensor *> full;
 };
 
 class TensorPool {
 public:
-    void CreateBlockingQueuePair() {
-
-    }
-    Tensor *CreateTensor(std::vector<unsigned int> &shape);
+    ~TensorPool();
+    BlockingQueuePair *CreateBlockingQueue(std::vector<int> &shape);
+    Tensor *CreateTensor(std::vector<int> &shape);
 
 private:
-    std::vector<BlockingQueuePair *> queue_pairs_;
+    std::vector<BlockingQueuePair *> bq_pairs_;
     std::vector<Tensor *> tensors_;
 };
 

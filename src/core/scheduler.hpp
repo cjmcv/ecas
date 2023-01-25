@@ -29,9 +29,8 @@ public:
     
     ////////////////////////
     /// Tensors management
-    bool CheckShapes();
     // Setup tensors for cross node interaction.
-    void SetupTensors();
+    void SetupInteractTensors();
 
     ////////////////////////
     /// Serial Execution
@@ -65,7 +64,6 @@ private:
 
     // //
     TensorPool *tensor_pool_;
-    bool is_tensor_setup_;
 };
 
 }  // end of namespace ecas.
