@@ -1,5 +1,7 @@
 #include "ecas/ecas.hpp"
 
+#include <thread>
+
 void TaskA(void *in, void *out) {
     printf("TaskA.\n");
 }
@@ -42,10 +44,12 @@ int main() {
     a[0] = 1; a[1] = 2;
 
     session->Start();
-    session->Feed(in);
-    printf("Finish Feed.\n");
-    ecas::ITensor *out;
-    session->GetResult(&out);
+    // for (int i=0; i<10; i++) {
+        session->Feed(in);
+        ecas::ITensor *out;
+        session->GetResult(&out);
+    // }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     session->Stop();
     return 0;
 }

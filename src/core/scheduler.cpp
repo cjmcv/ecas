@@ -19,6 +19,8 @@ Scheduler::~Scheduler() {
     delete tensor_pool_;
 }
 
+// TODO: 可以有缺省id号，在未设置id号时，自动给其新增一个只有它自己的group。
+//       默认每个节点都各开一个线程，分组主要目的是为了绑核。
 void Scheduler::MarkGroupId(Node *node, int group_id) {
     static int init_size = 10;
     if (groups_temp_.size() != init_size) {
@@ -41,6 +43,24 @@ void Scheduler::UpdateGroups() {
 
 ////////////////////////
 /// Tensors management
+void Scheduler::SetupIoTensors(Node *input_node, Node *output_node) {
+    if (input_node == nullptr || output_node == nullptr)
+        ECAS_LOGE("SetupIoTensors -> Both input and output nodes must exist.\n");
+    if (input_node->input_shapes().size() != 1 || output_node->output_shapes().size() != 1)
+        ECAS_LOGE("SetupIoTensors -> Input node has one input, output node has one output.\n");
+
+    BlockingQueuePair *bqp;
+    bqp = tensor_pool_->CreateBlockingQueue(input_node->input_shapes()[0]);
+    bqp->front_name = "input";
+    bqp->rear_name = input_node->name();
+    input_node->AppendInputs(bqp);
+
+    bqp = tensor_pool_->CreateBlockingQueue(output_node->output_shapes()[0]);
+    bqp->front_name = output_node->name();
+    bqp->rear_name = "output";
+    output_node->AppendOutputs(bqp);
+}
+
 void Scheduler::SetupInteractTensors() {
     // Check whether the shapes match and create tensors for node interaction.
     for (int i = 0; i < groups_.size(); i++) {
@@ -85,6 +105,8 @@ void Scheduler::SetupInteractTensors() {
                                   (node %s to %s).\n", n->name().c_str(), out_node->name().c_str());
                     }
                     BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(output_shapes[si]);
+                    bqp->front_name = n->name();
+                    bqp->rear_name = out_node->name();
                     n->AppendOutputs(bqp);
                     out_node->AppendInputs(bqp);
                 }
@@ -143,7 +165,7 @@ void Scheduler::ShowGroups() {
 
         ECAS_LOGS("%d -> ", i);
         for (int j = 0; j < groups_[i].size(); j++) {
-            ECAS_LOGS("%s (%d)", ((Node *)groups_[i][j])->name().c_str(), groups_[i][j]);
+            ECAS_LOGS("%s", ((Node *)groups_[i][j])->name().c_str()); // groups_[i][j]
             if (j != groups_[i].size() - 1) ECAS_LOGS(", ");
         }
         ECAS_LOGS("\n");
@@ -160,8 +182,13 @@ void Scheduler::TasksSpawn() {
         threads_.emplace_back([this, i, groups]() -> void {
             while (!is_stop_) {
                 for (int ni=0; ni<groups[i].size(); ni++) {
-                    printf("ni: %s, tid: %d.\n", groups[i][ni]->name().c_str(), std::this_thread::get_id());
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    Node *n = groups[i][ni];
+                    printf("%s, tid: %d, ", n->name().c_str(), std::this_thread::get_id());
+                    bool is_inputs_ready = n->CheckInputIsReady();
+                    ITensor *input;
+                    ITensor *output;
+                    n->Run(input, output);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     // // Wait and check intputs from depends.
                     // bool is_pass = WaitCheckInputs(node);
                     // if (!is_pass) { break; }
@@ -174,6 +201,7 @@ void Scheduler::TasksSpawn() {
 
 void Scheduler::TasksStop() {
     is_stop_ = true;
+    // ECAS_LOGI("TasksStop.\n");
 }
 
 void Scheduler::TasksJoin() {

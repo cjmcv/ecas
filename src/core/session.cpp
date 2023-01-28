@@ -109,12 +109,12 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
         }
         else if (iter->second->input_nodes() == nullptr) {
             if (p->input_node != nullptr) 
-                ECAS_LOGE("Only one input node is allowed.\n");
+                ECAS_LOGE("BuildGraph -> Only one input node is allowed.\n");
             p->input_node = iter->second;
         }
         else if (iter->second->output_nodes() == nullptr) {
             if (p->output_node != nullptr) 
-                ECAS_LOGE("Only one output node is allowed.\n");
+                ECAS_LOGE("BuildGraph -> Only one output node is allowed.\n");
             p->output_node = iter->second;
         }
     }
@@ -124,7 +124,7 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
     // Prepare input and output tensors for nodes interaction.
     p->scheduler.SetupInteractTensors();
     // Prepare input and output tensors of the graph.
-
+    p->scheduler.SetupIoTensors(p->input_node, p->output_node);
 }
 
 void Session::Group(std::vector<std::vector<std::string>> &&groups) {
@@ -231,7 +231,8 @@ void Session::Stop() {
 void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
     // ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
-
+    
+    // p->input_data->Enqueue(&in);
     // p->scheduler.BfsExecute(p->input_node, &in);
 }
 

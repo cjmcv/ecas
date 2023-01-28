@@ -30,8 +30,10 @@ public:
     ////////////////////////
     /// Tensors management
     // Setup tensors for cross node interaction.
+    void SetupIoTensors(Node *input_node, Node *output_node);
     void SetupInteractTensors();
 
+    
     ////////////////////////
     /// Serial Execution
     // Breadth First.

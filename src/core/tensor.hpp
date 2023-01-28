@@ -10,15 +10,19 @@
 #include <vector>
 
 #include "buffer.hpp"
+#include "ecas/ecas.hpp"
 
 namespace ecas {
 
+// TODO: gpu数据持有
 // 基本数据计算与操作
 class Tensor {
 
 public:
     Tensor(std::vector<int> &shape);
     ~Tensor();
+
+    void CloneTo(Tensor *out);
 
 private:
     int id_;

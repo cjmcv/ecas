@@ -10,6 +10,7 @@
 
 namespace ecas {
 
+// TODO: 基类Buffer，派生X86，vulkan等子类。由Buffer类统一对Tensor提供服务。
 // 内存管理，只管内存不管怎么用
 class Buffer {
 

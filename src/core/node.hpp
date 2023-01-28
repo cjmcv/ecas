@@ -38,6 +38,9 @@ public:
     inline std::vector<BlockingQueuePair *> &inputs() { return inputs_; }
     inline std::vector<BlockingQueuePair *> &outputs() { return outputs_; }
 
+    bool CheckInputIsReady();
+    void GetInputsBuffer();
+
 protected:
     std::string name_;
     OpTag op_tag_;

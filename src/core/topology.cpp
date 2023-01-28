@@ -13,11 +13,11 @@ Topology::Topology() {}
 Topology::~Topology() {}
 
 void Topology::Build(std::map<std::string, Node*> &nodes, std::vector<std::vector<std::string>> &&relation) {
-    for (int i=0; i<relation.size(); i++) {
-        for (int j=1; j<relation[i].size(); j++) {
-            printf("%s->%s.\n", relation[i][j-1].c_str(), relation[i][j].c_str());    
-        }
-    }
+    // for (int i=0; i<relation.size(); i++) {
+    //     for (int j=1; j<relation[i].size(); j++) {
+    //         printf("%s->%s.\n", relation[i][j-1].c_str(), relation[i][j].c_str());    
+    //     }
+    // }
 
     for (int i=0; i<relation.size(); i++) {
         for (int j=1; j<relation[i].size(); j++) {

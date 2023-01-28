@@ -37,7 +37,7 @@ struct SessionConfig {
 
 struct ITensor {
     char *data;
-    int len;
+    std::vector<int> shape;
 };
 
 using Task = std::function<void(ITensor *input, ITensor *output)>;

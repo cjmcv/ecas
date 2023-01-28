@@ -22,4 +22,10 @@ Tensor::~Tensor() {
     delete buffer_;
 }
 
+void Tensor::CloneTo(Tensor *out) {
+    out->size_ = this->size_;
+    out->shape_ = this->shape_;
+    memcpy(out->buffer_->data(), this->buffer_->data(), this->size_);
+}
+
 }  // end of namespace ecas.
