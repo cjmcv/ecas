@@ -121,10 +121,8 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
 
     // Group nodes.
     p->scheduler.UpdateGroups();
-    // Prepare input and output tensors for nodes interaction.
-    p->scheduler.SetupInteractTensors();
-    // Prepare input and output tensors of the graph.
-    p->scheduler.SetupIoTensors(p->input_node, p->output_node);
+    // Check shape && allocate memory && reorder
+    p->scheduler.SetupTensors(p->input_node, p->output_node);
 }
 
 void Session::Group(std::vector<std::vector<std::string>> &&groups) {
@@ -195,15 +193,17 @@ void Session::ShowInfo() {
         Node *n = iter->second;
         std::vector<BlockingQueuePair *> ins = n->inputs();
         std::vector<BlockingQueuePair *> outs = n->outputs();
+        if (ins.size() == 0 && outs.size() == 0)
+            continue;
         ECAS_LOGS("%s -> in: [", n->name().c_str());
         for (int i = 0; i < ins.size(); i++) {
-            ECAS_LOGS("%d", ins[i]);
+            ECAS_LOGS("%d(%s)", ins[i], ins[i]->front_name.c_str());
             if (i != ins.size() - 1)
                 ECAS_LOGS(", ");
         }
         ECAS_LOGS("], out: [");
         for (int i = 0; i < outs.size(); i++) {
-            ECAS_LOGS("%d", outs[i]);
+            ECAS_LOGS("%d(%s)", outs[i], outs[i]->rear_name.c_str());
             if (i != outs.size() - 1)
                 ECAS_LOGS(", ");
         }
@@ -218,7 +218,8 @@ void Session::ShowInfo() {
 void Session::Start() {
     SessionParams *p = (SessionParams *)params_;
     // Start all task threads.
-    p->scheduler.TasksSpawn();        
+    p->scheduler.TasksSpawn();
+    p->scheduler.StartProfile();      
 }
 
 void Session::Stop() {        
@@ -226,18 +227,20 @@ void Session::Stop() {
     // Stop all task threads.
     p->scheduler.TasksStop();
     p->scheduler.TasksJoin();
+    ECAS_LOGI("Session::Stop().\n");
 }
 
 void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
     // ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
     
-    // p->input_data->Enqueue(&in);
+    p->input_data->Enqueue(in);
     // p->scheduler.BfsExecute(p->input_node, &in);
 }
 
-void Session::GetResult(ITensor **out) {
-    
+void Session::GetResult(ITensor *out) {
+    SessionParams *p = (SessionParams *)params_;
+    p->input_data->Dequeue(out);
 }
 
 } // ecas.

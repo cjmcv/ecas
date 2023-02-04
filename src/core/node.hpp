@@ -6,8 +6,8 @@
 #define ECAS_CORE_NODE_HPP_
 
 #include <string>
-#include "ecas/ecas.hpp"
 #include "tensor_pool.hpp"
+#include "ecas/ecas.hpp"
 
 namespace ecas {
 
@@ -33,13 +33,20 @@ public:
     inline std::vector<std::vector<int>> &input_shapes() { return input_shapes_; }
     inline std::vector<std::vector<int>> &output_shapes() { return output_shapes_; }
 
-    inline void AppendInputs(BlockingQueuePair *bq) { inputs_.push_back(bq); }
-    inline void AppendOutputs(BlockingQueuePair *bq) { outputs_.push_back(bq); }
-    inline std::vector<BlockingQueuePair *> &inputs() { return inputs_; }
-    inline std::vector<BlockingQueuePair *> &outputs() { return outputs_; }
+    inline void AppendInputs(BlockingQueuePair *bq) { input_queues_.push_back(bq); }
+    inline void AppendOutputs(BlockingQueuePair *bq) { output_queues_.push_back(bq); }
+    inline std::vector<BlockingQueuePair *> &inputs() { return input_queues_; }
+    inline std::vector<BlockingQueuePair *> &outputs() { return output_queues_; }
 
-    bool CheckInputIsReady();
-    void GetInputsBuffer();
+    void ReorderInputQueues();
+    void ReorderOutputQueues();
+
+    bool CheckIoIsReady();
+    void GetInputs(std::vector<ITensor *> &inputs);
+    void GetOutputs(std::vector<ITensor *> &outputs);
+
+private:
+    void SwapQueueOrder(std::vector<BlockingQueuePair *> &queues, int i, int j);
 
 protected:
     std::string name_;
@@ -51,8 +58,8 @@ protected:
     std::vector<std::vector<int>> input_shapes_;
     std::vector<std::vector<int>> output_shapes_;
 
-    std::vector<BlockingQueuePair *> inputs_; // It is also part of the output of the input node 
-    std::vector<BlockingQueuePair *> outputs_; // It is also part of the input of the output node
+    std::vector<BlockingQueuePair *> input_queues_; // It is also part of the output of the input node 
+    std::vector<BlockingQueuePair *> output_queues_; // It is also part of the input of the output node
 };
 
 }  // end of namespace ecas.

@@ -38,6 +38,7 @@ int main() {
 
     // session->GetNodeIO("n1", Tenosr *in, Tensor *out);
 
+    ecas::ITensor out;
     ecas::ITensor in;
     in.data = (char *)malloc(sizeof(float) * 2);
     float *a = (float *)in.data;
@@ -45,11 +46,10 @@ int main() {
 
     session->Start();
     // for (int i=0; i<10; i++) {
-        session->Feed(in);
-        ecas::ITensor *out;
+        session->Feed(in);  // bug
         session->GetResult(&out);
     // }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     session->Stop();
     return 0;
 }

@@ -18,19 +18,30 @@ struct BlockingQueuePair {
     util::BlockingQueue<Tensor *> free;
     util::BlockingQueue<Tensor *> full;
 
-    void Enqueue(Tensor *input) {
+    void Enqueue(ITensor &input) {
+        printf("Enqueue: Start Enqueue: %d.\n", free.size());
         Tensor *inside_free;
         free.wait_and_pop(&inside_free);
-        input->CloneTo(inside_free);
+        printf("Enqueue: wait_and_pop.\n\t");
+        inside_free->CopyFrom(input);
+        printf("Enqueue: CopyFrom.\n\t");
         full.push(inside_free);
+        printf("Enqueue: Finish Enqueue.\n\t");
     }
 
-    bool Dequeue(Tensor *output) {
+    void Dequeue(ITensor *output) {
         Tensor *inside_full;
         full.wait_and_pop(&inside_full);
-        inside_full->CloneTo(output);
+        inside_full->CopyTo(output);
         free.push(inside_full);
-        return true;
+    }
+
+    void LoanOutFromFull(Tensor **out_full) {
+        full.try_pop(out_full);
+    }
+
+    void RecycleToFree(Tensor *in_free) {
+        free.push(in_free);
     }
 };
 
@@ -39,6 +50,8 @@ public:
     ~TensorPool();
     BlockingQueuePair *CreateBlockingQueue(std::vector<int> &shape);
     Tensor *CreateTensor(std::vector<int> &shape);
+
+    void PrintInfo();
 
 private:
     std::vector<BlockingQueuePair *> bq_pairs_;

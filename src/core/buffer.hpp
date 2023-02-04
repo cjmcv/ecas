@@ -15,14 +15,15 @@ namespace ecas {
 class Buffer {
 
 public:
+    Buffer(void *data, int size);
     Buffer(unsigned int size);
     ~Buffer();
     inline void *data() { return data_; }
 
 private:
     int size_;
-    int len_;
     void *data_;
+    bool is_owned_;
 };
 
 }  // end of namespace ecas.

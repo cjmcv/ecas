@@ -29,11 +29,8 @@ public:
     
     ////////////////////////
     /// Tensors management
-    // Setup tensors for cross node interaction.
-    void SetupIoTensors(Node *input_node, Node *output_node);
-    void SetupInteractTensors();
+    void SetupTensors(Node *input_node, Node *output_node);
 
-    
     ////////////////////////
     /// Serial Execution
     // Breadth First.
@@ -52,6 +49,19 @@ public:
     void TasksStop();
     void TasksJoin();
 
+    ////////////////////////
+    /// Profiler
+    void StartProfile();
+    void EndProfile();
+
+private:
+    // Setup tensors for cross node interaction.
+    void SetupIoTensors(Node *input_node, Node *output_node);
+    // Check whether the shapes match and create tensors for node interaction.
+    void SetupInteractTensors();
+    // Adjust the order of Tensors to make it consistent with the name order of input and output nodes.
+    void ReorderTensors();
+
 private:
     /// Serial Execution
     std::vector<Node *> bfs_nodes_;
@@ -66,6 +76,7 @@ private:
 
     // //
     TensorPool *tensor_pool_;
+    bool is_profiler_start_;
 };
 
 }  // end of namespace ecas.

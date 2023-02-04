@@ -30,12 +30,19 @@ enum OpTag {
     VECTOR_ADD, 
 };
 
+enum MemoryType {
+    MEMORY_HOST = 0,
+    MEMORY_DEVICE, 
+};
+
 struct SessionConfig {
     ExecutionMode mode;
     int num_thread;
 };
 
 struct ITensor {
+    MemoryType mem_type;
+    int id;
     char *data;
     std::vector<int> shape;
 };
@@ -67,7 +74,7 @@ public:
     // Asynchronous function.
     void Feed(ITensor &in);
     // Get the result after calling the Feed.
-    void GetResult(ITensor **out);
+    void GetResult(ITensor *out);
 
 private:
     void *params_;

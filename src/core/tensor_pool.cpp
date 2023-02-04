@@ -3,6 +3,7 @@
 */
 
 #include "tensor_pool.hpp"
+#include "util/logger.hpp"
 
 namespace ecas {
 
@@ -41,6 +42,16 @@ Tensor *TensorPool::CreateTensor(std::vector<int> &shape) {
     Tensor *t = new Tensor(shape);
     tensors_.push_back(t);
     return t;
+}
+
+void TensorPool::PrintInfo() {
+    ECAS_LOGS("TensorPool info:\n");
+    for (int i = 0; i < bq_pairs_.size(); i++) {
+        BlockingQueuePair *bqp = bq_pairs_[i];
+        ECAS_LOGS("[%s, %s]: (full: %d, free: %d).\n", 
+                  bqp->front_name.c_str(), bqp->rear_name.c_str(),
+                  bqp->full.size(), bqp->free.size());
+    }
 }
 
 }  // end of namespace ecas.

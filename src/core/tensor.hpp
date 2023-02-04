@@ -14,20 +14,26 @@
 
 namespace ecas {
 
-// TODO: gpu数据持有
+// ITensor 对外数据交互
+// Tensor 各种内存操作
+// Buffer 实际内存管理提供者，多设备多类型内存
+
 // 基本数据计算与操作
 class Tensor {
 
 public:
     Tensor(std::vector<int> &shape);
+    // Tensor(ITensor &in);
     ~Tensor();
 
-    void CloneTo(Tensor *out);
+    inline ITensor *GetITensorPtr() { return it_; }
+
+    void CopyFrom(ITensor &in);
+    void CopyTo(ITensor *out);
 
 private:
-    int id_;
     int size_;
-    std::vector<int> shape_;
+    ITensor *it_;
     Buffer *buffer_;
 };
 

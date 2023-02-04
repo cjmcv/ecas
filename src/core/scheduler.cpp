@@ -11,6 +11,7 @@ namespace ecas {
 
 Scheduler::Scheduler() {
     is_stop_ = false;
+    is_profiler_start_ = false;
     groups_.clear();
     tensor_pool_ = new TensorPool;
 }
@@ -42,7 +43,7 @@ void Scheduler::UpdateGroups() {
 }
 
 ////////////////////////
-/// Tensors management
+/// Tensors Setup
 void Scheduler::SetupIoTensors(Node *input_node, Node *output_node) {
     if (input_node == nullptr || output_node == nullptr)
         ECAS_LOGE("SetupIoTensors -> Both input and output nodes must exist.\n");
@@ -62,58 +63,77 @@ void Scheduler::SetupIoTensors(Node *input_node, Node *output_node) {
 }
 
 void Scheduler::SetupInteractTensors() {
-    // Check whether the shapes match and create tensors for node interaction.
+    // Only nodes in the group are valid
     for (int i = 0; i < groups_.size(); i++) {
         for (int j = 0; j < groups_[i].size(); j++) {
             Node *n = (Node *)groups_[i][j];
-            std::vector<std::vector<int>> output_shapes = n->output_shapes();
-            std::vector<Node *> *output_nodes = n->output_nodes();
+            std::vector<std::vector<int>> input_shapes = n->input_shapes();
+            std::vector<Node *> *input_nodes = n->input_nodes();
 
-            // if output_nodes == nullptr, 
-            // it indicates that it is an output node and does not need to check the output shape.
-            if (output_nodes != nullptr) {
-                // The number of output shapes and output nodes should be the same.
-                if (output_nodes->size() != output_shapes.size())
-                    ECAS_LOGE("SetupInteractTensors -> output_nodes->size() != output_shapes.size(): %d vs %d.\n", 
-                            output_nodes->size(), output_shapes.size());
+            // if input_nodes == nullptr, it indicates that it is an input node of the graph 
+            // and does not need to check the output shape.
+            if (input_nodes == nullptr) {
+                continue;
+            }
 
-                // Check each of output_shapes.
-                for (int si=0; si<output_shapes.size(); si++) {
-                    Node *out_node = (*output_nodes)[si];
-                    std::vector<std::vector<int>> need_match_shapes = out_node->input_shapes();
+            // The number of input shapes and input nodes should be the same.
+            if (input_nodes->size() != input_shapes.size())
+                ECAS_LOGE("SetupInteractTensors -> output_nodes->size() != output_shapes.size(): %d vs %d.\n",
+                          input_nodes->size(), input_shapes.size());
 
-                    if (need_match_shapes.size() == 1) {
-                        if (need_match_shapes[0] != output_shapes[si]) {
-                            ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n", 
-                                      n->name().c_str(), out_node->name().c_str());                            
-                        }
+            // Check each of input nodes.
+            for (int si = 0; si < input_nodes->size(); si++) {
+                Node *in_node = (*input_nodes)[si];
+                std::vector<std::vector<int>> need_match_shapes = in_node->output_shapes();
+
+                if (need_match_shapes.size() == 1) {
+                    if (need_match_shapes[0] != input_shapes[si]) {
+                        ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
+                                  n->name().c_str(), in_node->name().c_str());
                     }
-                    else if (need_match_shapes.size() > 1) {
-                        // TODO: 目前其中一个能匹配就算匹配上了，但实际上看可能会在a+b=>c时，a和b的输出维度一致和c的其中一个输入吻合，c的另一个不吻合，则应该是不匹配的。但目前的策略是会判断为匹配的。
-                        bool is_pass = false;
-                        for (int ni=0; ni<need_match_shapes.size(); ni++) {
-                            if (need_match_shapes[ni] == output_shapes[si])
-                                is_pass = true;
-                        }
-                        if (is_pass == false) {
-                            ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
-                                      n->name().c_str(), out_node->name().c_str());                            
-                        }
-                    }
-                    else {
-                        ECAS_LOGE("SetupInteractTensors -> Shape check failed: need_match_shapes.size() <= 0 \
-                                  (node %s to %s).\n", n->name().c_str(), out_node->name().c_str());
-                    }
-                    BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(output_shapes[si]);
-                    bqp->front_name = n->name();
-                    bqp->rear_name = out_node->name();
-                    n->AppendOutputs(bqp);
-                    out_node->AppendInputs(bqp);
                 }
+                else if (need_match_shapes.size() > 1) {
+                    // TODO: 目前其中一个能匹配就算匹配上了，但实际上看可能会在a+b=>c时，a和b的输出维度一致和c的其中一个输入吻合，c的另一个不吻合，则应该是不匹配的。但目前的策略是会判断为匹配的。
+                    bool is_pass = false;
+                    for (int ni = 0; ni < need_match_shapes.size(); ni++) {
+                        if (need_match_shapes[ni] == input_shapes[si])
+                            is_pass = true;
+                    }
+                    if (is_pass == false) {
+                        ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
+                                  n->name().c_str(), in_node->name().c_str());
+                    }
+                }
+                else {
+                    ECAS_LOGE("SetupInteractTensors -> Shape check failed: need_match_shapes.size() <= 0 \
+                                  (node %s to %s).\n",
+                              n->name().c_str(), in_node->name().c_str());
+                }
+                // Check passed and allocate BlockingQueuePair.
+                BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(input_shapes[si]);
+                bqp->front_name = in_node->name();
+                bqp->rear_name = n->name();
+                in_node->AppendOutputs(bqp);
+                n->AppendInputs(bqp);
             }
         }
-        ECAS_LOGS("\n");
     }
+}
+
+void Scheduler::ReorderTensors() {
+    for (int i = 0; i < groups_.size(); i++) {
+        for (int j = 0; j < groups_[i].size(); j++) {
+            Node *n = (Node *)groups_[i][j];
+            n->ReorderInputQueues();
+            n->ReorderOutputQueues();
+        }
+    }
+}
+
+void Scheduler::SetupTensors(Node *input_node, Node *output_node) {
+    SetupInteractTensors();
+    SetupIoTensors(input_node, output_node);    
+    ReorderTensors();
 }
 
 ////////////////////////
@@ -184,15 +204,14 @@ void Scheduler::TasksSpawn() {
                 for (int ni=0; ni<groups[i].size(); ni++) {
                     Node *n = groups[i][ni];
                     printf("%s, tid: %d, ", n->name().c_str(), std::this_thread::get_id());
-                    bool is_inputs_ready = n->CheckInputIsReady();
-                    ITensor *input;
-                    ITensor *output;
-                    n->Run(input, output);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    // // Wait and check intputs from depends.
-                    // bool is_pass = WaitCheckInputs(node);
-                    // if (!is_pass) { break; }
-                    // Process(node, timer);                    
+                    bool is_inputs_ready = n->CheckIoIsReady();
+                    if (is_inputs_ready) {
+                        
+                        ITensor *input;
+                        ITensor *output;
+                        n->Run(input, output);  
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));                      
+                    }                 
                 } 
             } 
         });
@@ -208,6 +227,25 @@ void Scheduler::TasksJoin() {
     for (auto& t : threads_) {
       t.join();
     }
+}
+
+////////////////////////
+/// Profiler
+void Scheduler::StartProfile() {
+    if (is_profiler_start_ == true)
+        return;
+
+    is_profiler_start_ = true;
+    std::thread *t = new std::thread([this]() -> void {
+        while (is_profiler_start_ == true) {
+            tensor_pool_->PrintInfo();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    });
+}
+
+void Scheduler::EndProfile() {
+    is_profiler_start_ = false;
 }
 
 }  // end of namespace ecas.
