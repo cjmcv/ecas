@@ -2,22 +2,22 @@
 
 #include <thread>
 
-void TaskA(void *in, void *out) {
+void TaskA(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     printf("TaskA.\n");
 }
-void TaskB(void *in, void *out) {
+void TaskB(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     printf("TaskB.\n");
 }
-void TaskC(void *in, void *out) {
+void TaskC(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     printf("TaskC.\n");
 }
-void TaskD(void *in, void *out) {
+void TaskD(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     printf("TaskD.\n");
 }
 
 int main() {
     ecas::HelloWorld();
-    ecas::VulkanHelloWorld();
+    // ecas::VulkanHelloWorld();
     
     ecas::SessionConfig config;
     config.mode = ecas::ExecutionMode::SINGLE;

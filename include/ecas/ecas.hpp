@@ -47,7 +47,7 @@ struct ITensor {
     std::vector<int> shape;
 };
 
-using Task = std::function<void(ITensor *input, ITensor *output)>;
+using Task = std::function<void(std::vector<ITensor *> &input, std::vector<ITensor *> &output)>;
 
 // Session
 class ECAS_API Session {

@@ -11,7 +11,7 @@ namespace util {
 template <typename T>
 class BlockingQueue {
 public:
-    BlockingQueue() {};
+    BlockingQueue() = default;
     ~BlockingQueue() {};
 
     void push(const T& t);

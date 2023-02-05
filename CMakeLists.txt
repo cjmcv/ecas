@@ -12,7 +12,7 @@ else()
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-option(ECAS_GPU_USE_VULKAN "GPU acceleration using vulkan" ON)
+option(ECAS_GPU_USE_VULKAN "GPU acceleration using vulkan" OFF)
 
 # Release by default
 set(CMAKE_BUILD_TYPE "Release")  # Debug

@@ -144,9 +144,9 @@ void Scheduler::BfsExecute(Node *input_node, ITensor *input_data) {
     tasks.push(input_node);
     while (!tasks.empty()) {
         Node *t = tasks.front();
-        ITensor *input;
-        ITensor *output;
-        t->Run(input, output);
+        // ITensor *input;
+        // ITensor *output;
+        // t->Run(input, output);
         std::vector<Node *> *outs = t->output_nodes();
         if (outs != nullptr) {
             for (unsigned int i=0; i<outs->size(); i++) {
@@ -171,7 +171,7 @@ void Scheduler::BuildGroup(std::map<std::string, Node *> &nodes,
                 groups_[i][j] = iter->second;
             }
             else {
-                ECAS_LOGI("BuildGroup -> Can not find node named %s .\n", groups[i][j]);
+                ECAS_LOGI("BuildGroup -> Can not find node named %s .\n", groups[i][j].c_str());
             }
         }
     }
@@ -200,20 +200,20 @@ void Scheduler::TasksSpawn() {
     std::vector<std::vector<Node *>> &groups = groups_;
     for (unsigned i = 0; i < groups.size(); ++i) {
         threads_.emplace_back([this, i, groups]() -> void {
+            std::vector<ITensor *> inputs;
+            std::vector<ITensor *> outputs;
+
             while (!is_stop_) {
+                // 同一组的按顺序堵塞执行，不会有帧差
                 for (int ni=0; ni<groups[i].size(); ni++) {
                     Node *n = groups[i][ni];
-                    printf("%s, tid: %d, ", n->name().c_str(), std::this_thread::get_id());
-                    bool is_inputs_ready = n->CheckIoIsReady();
-                    if (is_inputs_ready) {
-                        
-                        ITensor *input;
-                        ITensor *output;
-                        n->Run(input, output);  
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));                      
-                    }                 
+                    printf("Start BorrowIo: %s.\n", n->name().c_str());
+                    n->BorrowIo(inputs, outputs);
+                    printf("%s -> (%d, %d).\n", n->name().c_str(), inputs.size(), outputs.size());
+                    n->Run(inputs, outputs);
                 } 
-            } 
+            }
+            printf("is_stop_: %d.\n", is_stop_);
         });
     }
 }

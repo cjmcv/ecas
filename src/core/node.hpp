@@ -21,7 +21,7 @@ class Node {
 public:
     Node(): input_nodes_(nullptr), output_nodes_(nullptr) {}
     virtual ~Node() {};
-    virtual void Run(ITensor *input, ITensor *output) = 0;
+    virtual void Run(std::vector<ITensor *> &input, std::vector<ITensor *> &output) = 0;
 
     inline std::string &name() { return name_; }
     inline void SetInputNodes(std::vector<Node *> *input_nodes) { input_nodes_ = input_nodes; };
@@ -35,15 +35,15 @@ public:
 
     inline void AppendInputs(BlockingQueuePair *bq) { input_queues_.push_back(bq); }
     inline void AppendOutputs(BlockingQueuePair *bq) { output_queues_.push_back(bq); }
-    inline std::vector<BlockingQueuePair *> &inputs() { return input_queues_; }
-    inline std::vector<BlockingQueuePair *> &outputs() { return output_queues_; }
+    inline std::vector<BlockingQueuePair *> &input_queues() { return input_queues_; }
+    inline std::vector<BlockingQueuePair *> &output_queues() { return output_queues_; }
 
     void ReorderInputQueues();
     void ReorderOutputQueues();
 
     bool CheckIoIsReady();
-    void GetInputs(std::vector<ITensor *> &inputs);
-    void GetOutputs(std::vector<ITensor *> &outputs);
+    void BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    void RecycleIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
 
 private:
     void SwapQueueOrder(std::vector<BlockingQueuePair *> &queues, int i, int j);

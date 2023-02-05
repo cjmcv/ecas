@@ -13,7 +13,6 @@
 
 #include "node.hpp"
 #include "tensor_pool.hpp"
-#include "util/blocking_queue.hpp"
 #include "util/logger.hpp"
 
 namespace ecas {

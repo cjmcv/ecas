@@ -3,6 +3,8 @@
 */
 
 #include "tensor.hpp"
+
+#include <string.h>
 #include "util/logger.hpp"
 
 namespace ecas {

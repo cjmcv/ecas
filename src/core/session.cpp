@@ -27,9 +27,6 @@ struct SessionParams {
     std::string name;
     ExecutionMode mode;
     int num_thread;
-    
-    BlockingQueuePair *input_data;
-    BlockingQueuePair *output_data;
 
     std::map<std::string, Node*> nodes; // 包含普通节点和组合节点
     Node *input_node;
@@ -191,8 +188,8 @@ void Session::ShowInfo() {
     ECAS_LOGS("Tensors: \n");
     for(iter = p->nodes.begin(); iter != p->nodes.end(); iter++) {
         Node *n = iter->second;
-        std::vector<BlockingQueuePair *> ins = n->inputs();
-        std::vector<BlockingQueuePair *> outs = n->outputs();
+        std::vector<BlockingQueuePair *> ins = n->input_queues();
+        std::vector<BlockingQueuePair *> outs = n->output_queues();
         if (ins.size() == 0 && outs.size() == 0)
             continue;
         ECAS_LOGS("%s -> in: [", n->name().c_str());
@@ -219,7 +216,7 @@ void Session::Start() {
     SessionParams *p = (SessionParams *)params_;
     // Start all task threads.
     p->scheduler.TasksSpawn();
-    p->scheduler.StartProfile();      
+    // p->scheduler.StartProfile();      
 }
 
 void Session::Stop() {        
@@ -234,13 +231,13 @@ void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
     // ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
     
-    p->input_data->Enqueue(in);
+    p->input_node->input_queues()[0]->Enqueue(in);
     // p->scheduler.BfsExecute(p->input_node, &in);
 }
 
 void Session::GetResult(ITensor *out) {
     SessionParams *p = (SessionParams *)params_;
-    p->input_data->Dequeue(out);
+    p->output_node->output_queues()[0]->Dequeue(out);
 }
 
 } // ecas.

@@ -47,7 +47,6 @@ void Node::ReorderOutputQueues() {
     }
 }
 
-// TODO: 节点间数据衔接
 bool Node::CheckIoIsReady() {
     bool is_ready = true;
     for (int i=0; i<input_queues_.size(); i++) {
@@ -61,26 +60,29 @@ bool Node::CheckIoIsReady() {
     return is_ready;
 }
 
-void Node::GetInputs(std::vector<ITensor *> &inputs) {
+void Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
     inputs.clear();
+    printf("input_queues_.size: %d.\n", input_queues_.size());
     for (int i=0; i<input_queues_.size(); i++) {
-        if (input_queues_[i]->full.empty()) {
-            
-        }
+        Tensor *inside_full;
+        printf("input_queues_[%d]->full.size : %d.\n", i, input_queues_[i]->full.size());
+        input_queues_[i]->full.wait_and_pop(&inside_full);
+        ITensor *it = inside_full->GetITensorPtr();
+        inputs.push_back(it);
     }
-
-    //
-        // std::vector<Node *> *ins = n->input_nodes();
-        // if (ins != nullptr) {
-        //     for(int i=0; i<ins->size(); i++) {
-        //         ECAS_LOGS("%s", (*ins)[i]->name().c_str());
-        //         if (i != ins->size() - 1) ECAS_LOGS(", ");
-        //     }
-        // }
+    outputs.clear();
+    printf("output_queues_.size: %d.\n", output_queues_.size());
+    for (int i=0; i<output_queues_.size(); i++) {
+        Tensor *inside_free;
+        printf("output_queues_[%d]->free.size : %d.\n", i, output_queues_[i]->free.size());
+        output_queues_[i]->free.wait_and_pop(&inside_free);
+        ITensor *it = inside_free->GetITensorPtr();
+        outputs.push_back(it);
+    }
 }
 
-void Node::GetOutputs(std::vector<ITensor *> &outputs) {
-    
+void RecycleIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
+
 }
 
 }  // end of namespace ecas.
