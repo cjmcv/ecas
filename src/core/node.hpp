@@ -42,8 +42,8 @@ public:
     void ReorderOutputQueues();
 
     bool CheckIoIsReady();
-    void BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
-    void RecycleIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    bool BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    void RecycleIo();
 
 private:
     void SwapQueueOrder(std::vector<BlockingQueuePair *> &queues, int i, int j);
@@ -60,6 +60,9 @@ protected:
 
     std::vector<BlockingQueuePair *> input_queues_; // It is also part of the output of the input node 
     std::vector<BlockingQueuePair *> output_queues_; // It is also part of the input of the output node
+
+    std::vector<Tensor *> input_tensors_;
+    std::vector<Tensor *> output_tensors_;
 };
 
 }  // end of namespace ecas.

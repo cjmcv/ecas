@@ -3,16 +3,20 @@
 #include <thread>
 
 void TaskA(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
-    printf("TaskA.\n");
+    static int count = 0;
+    printf("TaskA: %d.\n", count++);
 }
 void TaskB(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
-    printf("TaskB.\n");
+    static int count = 0;
+    printf("TaskB: %d.\n", count++);
 }
 void TaskC(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
-    printf("TaskC.\n");
+    static int count = 0;
+    printf("TaskC: %d.\n", count++);
 }
 void TaskD(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
-    printf("TaskD.\n");
+    static int count = 0;
+    printf("TaskD: %d.\n", count++);
 }
 
 int main() {
@@ -24,7 +28,7 @@ int main() {
     config.num_thread = 1;
     ecas::Session *session = new ecas::Session("s1", config);
 
-    // TODO: BuildGraph后将完成group的确认和tensor/Blockingqueue的分配。
+    // TODO: 简化API
     session->CreateNode("n1", TaskA, {{2}}, {{2, 2}, {3, 3}}, 0);
     session->CreateNode("n2", TaskB, {{2, 2}}, {{2, 2}}, 1);
     session->CreateNode("n3", TaskC, {{3, 3}}, {{3, 3}}, 0);
@@ -38,18 +42,27 @@ int main() {
 
     // session->GetNodeIO("n1", Tenosr *in, Tensor *out);
 
-    ecas::ITensor out;
     ecas::ITensor in;
     in.data = (char *)malloc(sizeof(float) * 2);
     float *a = (float *)in.data;
     a[0] = 1; a[1] = 2;
+    in.shape = {2};
+    in.mem_type = ecas::MEMORY_HOST;
+
+    ecas::ITensor out;
+    out.data = (char *)malloc(sizeof(float) * 2);
+    out.shape = {2};
+    out.mem_type = ecas::MEMORY_HOST;
 
     session->Start();
-    // for (int i=0; i<10; i++) {
-        session->Feed(in);  // bug
+    for (int i=0; i<5; i++) {
+        session->Feed(in);
+    }
+    for (int i=0; i<5; i++) {
         session->GetResult(&out);
-    // }
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    printf("Call stop.\n");
     session->Stop();
     return 0;
 }

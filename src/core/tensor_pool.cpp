@@ -54,4 +54,12 @@ void TensorPool::PrintInfo() {
     }
 }
 
+void TensorPool::ExitAllBlockingQueue() {
+    for (int i=0; i<bq_pairs_.size(); i++) {
+        BlockingQueuePair *bqp = bq_pairs_[i];
+        bqp->full.exit();
+        bqp->free.exit();
+    }
+}
+
 }  // end of namespace ecas.

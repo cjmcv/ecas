@@ -122,10 +122,11 @@ void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
     p->scheduler.SetupTensors(p->input_node, p->output_node);
 }
 
-void Session::Group(std::vector<std::vector<std::string>> &&groups) {
-    SessionParams *p = (SessionParams *)params_;
-    p->scheduler.BuildGroup(p->nodes, std::forward<std::vector<std::vector<std::string>>>(groups));
-}
+//// It will determine the thread allocation scheme.
+// void Session::Group(std::vector<std::vector<std::string>> &&groups) {
+//     SessionParams *p = (SessionParams *)params_;
+//     p->scheduler.BuildGroup(p->nodes, std::forward<std::vector<std::vector<std::string>>>(groups));
+// }
 
 void Session::ShowInfo() {
     SessionParams *p = (SessionParams *)params_;
@@ -216,7 +217,7 @@ void Session::Start() {
     SessionParams *p = (SessionParams *)params_;
     // Start all task threads.
     p->scheduler.TasksSpawn();
-    // p->scheduler.StartProfile();      
+    p->scheduler.StartProfile();      
 }
 
 void Session::Stop() {        
@@ -224,13 +225,13 @@ void Session::Stop() {
     // Stop all task threads.
     p->scheduler.TasksStop();
     p->scheduler.TasksJoin();
+    p->scheduler.EndProfile();
     ECAS_LOGI("Session::Stop().\n");
 }
 
 void Session::Feed(ITensor &in) {
     SessionParams *p = (SessionParams *)params_;
     // ECAS_LOGI("Session Running: %s, %d, %d.\n", p->name.c_str(), p->mode, p->num_thread);
-    
     p->input_node->input_queues()[0]->Enqueue(in);
     // p->scheduler.BfsExecute(p->input_node, &in);
 }
@@ -238,6 +239,13 @@ void Session::Feed(ITensor &in) {
 void Session::GetResult(ITensor *out) {
     SessionParams *p = (SessionParams *)params_;
     p->output_node->output_queues()[0]->Dequeue(out);
+}
+
+//
+
+ITensor *Session::CreateTensor(std::vector<int> &&shape) {
+    SessionParams *p = (SessionParams *)params_;
+    return nullptr; //p->tensor_pool_->CreateTensor(shape); // tensor pool转全局单例，添加依赖关系（如何表达？）
 }
 
 } // ecas.

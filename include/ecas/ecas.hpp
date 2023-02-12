@@ -60,12 +60,7 @@ public:
                     std::vector<std::vector<int>> &&out_shapes,
                     int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
-
     void BuildGraph(std::vector<std::vector<std::string>> &&relation);
-    // Group nodes.
-    // It will determine the thread allocation scheme.
-    void Group(std::vector<std::vector<std::string>> &&groups);
-
     void ShowInfo();
 
     void Start();
@@ -76,6 +71,8 @@ public:
     // Get the result after calling the Feed.
     void GetResult(ITensor *out);
 
+    ITensor *CreateTensor(std::vector<int> &&shape);
+    
 private:
     void *params_;
 };

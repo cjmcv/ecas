@@ -32,6 +32,9 @@ public:
     void CopyTo(ITensor *out);
 
 private:
+    void CheckDimension(ITensor *target);
+
+private:
     int size_;
     ITensor *it_;
     Buffer *buffer_;

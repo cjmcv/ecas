@@ -60,29 +60,46 @@ bool Node::CheckIoIsReady() {
     return is_ready;
 }
 
-void Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
-    inputs.clear();
+bool Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
+    input_tensors_.clear();
     printf("input_queues_.size: %d.\n", input_queues_.size());
     for (int i=0; i<input_queues_.size(); i++) {
         Tensor *inside_full;
         printf("input_queues_[%d]->full.size : %d.\n", i, input_queues_[i]->full.size());
-        input_queues_[i]->full.wait_and_pop(&inside_full);
-        ITensor *it = inside_full->GetITensorPtr();
-        inputs.push_back(it);
+        bool is_ready = input_queues_[i]->full.wait_and_pop(&inside_full);
+        if (!is_ready) return false;
+        input_tensors_.push_back(inside_full);
     }
-    outputs.clear();
+    output_tensors_.clear();
     printf("output_queues_.size: %d.\n", output_queues_.size());
     for (int i=0; i<output_queues_.size(); i++) {
         Tensor *inside_free;
         printf("output_queues_[%d]->free.size : %d.\n", i, output_queues_[i]->free.size());
-        output_queues_[i]->free.wait_and_pop(&inside_free);
-        ITensor *it = inside_free->GetITensorPtr();
+        bool is_ready = output_queues_[i]->free.wait_and_pop(&inside_free);
+        if (!is_ready) return false;
+        output_tensors_.push_back(inside_free);
+    }
+    //
+    inputs.clear();
+    for (int i=0; i<input_tensors_.size(); i++) {
+        ITensor *it = input_tensors_[i]->GetITensorPtr();
+        inputs.push_back(it);
+    }
+    outputs.clear();
+    for (int i=0; i<output_tensors_.size(); i++) {
+        ITensor *it = output_tensors_[i]->GetITensorPtr();
         outputs.push_back(it);
     }
+    return true;
 }
 
-void RecycleIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
-
+void Node::RecycleIo() {
+    for (int i=0; i<input_queues_.size(); i++) {
+        input_queues_[i]->free.push(input_tensors_[i]);
+    }
+    for (int i=0; i<output_queues_.size(); i++) {
+        output_queues_[i]->full.push(output_tensors_[i]);
+    }
 }
 
 }  // end of namespace ecas.

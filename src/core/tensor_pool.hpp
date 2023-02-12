@@ -19,14 +19,10 @@ struct BlockingQueuePair {
     util::BlockingQueue<Tensor *> full;
 
     void Enqueue(ITensor &input) {
-        printf("Enqueue: Start Enqueue: %d.\n", free.size());
         Tensor *inside_free;
         free.wait_and_pop(&inside_free);
-        printf("Enqueue: wait_and_pop.\n\t");
         inside_free->CopyFrom(input);
-        printf("Enqueue: CopyFrom.\n\t");
         full.push(inside_free);
-        printf("Enqueue: Finish Enqueue.\n\t");
     }
 
     void Dequeue(ITensor *output) {
@@ -52,6 +48,7 @@ public:
     Tensor *CreateTensor(std::vector<int> &shape);
 
     void PrintInfo();
+    void ExitAllBlockingQueue();
 
 private:
     std::vector<BlockingQueuePair *> bq_pairs_;

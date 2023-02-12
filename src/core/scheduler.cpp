@@ -208,24 +208,26 @@ void Scheduler::TasksSpawn() {
                 for (int ni=0; ni<groups[i].size(); ni++) {
                     Node *n = groups[i][ni];
                     printf("Start BorrowIo: %s.\n", n->name().c_str());
-                    n->BorrowIo(inputs, outputs);
+                    bool ret = n->BorrowIo(inputs, outputs);
+                    if (ret == false) break;
                     printf("%s -> (%d, %d).\n", n->name().c_str(), inputs.size(), outputs.size());
                     n->Run(inputs, outputs);
+                    n->RecycleIo();
                 } 
             }
-            printf("is_stop_: %d.\n", is_stop_);
+            printf("group: %d, is_stop_: %d.\n", i, is_stop_);
         });
     }
 }
 
 void Scheduler::TasksStop() {
     is_stop_ = true;
-    // ECAS_LOGI("TasksStop.\n");
+    tensor_pool_->ExitAllBlockingQueue();
 }
 
 void Scheduler::TasksJoin() {
     for (auto& t : threads_) {
-      t.join();
+        t.join();
     }
 }
 
@@ -239,7 +241,7 @@ void Scheduler::StartProfile() {
     std::thread *t = new std::thread([this]() -> void {
         while (is_profiler_start_ == true) {
             tensor_pool_->PrintInfo();
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(3));
         }
     });
 }

@@ -11,24 +11,20 @@ namespace util {
 template <typename T>
 class BlockingQueue {
 public:
-    BlockingQueue() = default;
+    BlockingQueue() : is_exit_(false) {};
     ~BlockingQueue() {};
 
     void push(const T& t);
     bool try_front(T* t);
     bool try_pop(T* t);
-    void wait_and_pop(T* t);
+    bool wait_and_pop(T* t);
 
-    inline bool empty() const {
-        std::unique_lock <std::mutex> lock(mutex_);
-        return queue_.empty();
-    }
-    inline int size() const {
-        std::unique_lock <std::mutex> lock(mutex_);
-        return queue_.size();
-    }
+    inline bool empty() const { return queue_.empty(); }
+    inline int size() const { return queue_.size(); }
+    inline void exit() { is_exit_ = true; cond_var_.notify_all(); }
 
 private:
+    bool is_exit_;
     mutable std::mutex mutex_;
     std::condition_variable cond_var_;
     std::queue<T> queue_;
@@ -64,13 +60,16 @@ bool BlockingQueue<T>::try_pop(T* t) {
 }
 
 template <typename T>
-void BlockingQueue<T>::wait_and_pop(T* t) {
+bool BlockingQueue<T>::wait_and_pop(T* t) {
     std::unique_lock <std::mutex> lock(mutex_);
-    while (queue_.empty())
+    while (!is_exit_ && queue_.empty())
         cond_var_.wait(lock);
+
+    if (is_exit_) return false;
 
     *t = queue_.front();
     queue_.pop();
+    return true;
 }
 
 } // namespace util

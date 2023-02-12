@@ -42,18 +42,23 @@ Tensor::~Tensor() {
     delete buffer_;
 }
 
-void Tensor::CopyFrom(ITensor &in) {
-    // Check dimension.
+void Tensor::CheckDimension(ITensor *target) {
+    if (it_->shape.size() != target->shape.size()) {
+        ECAS_LOGE("Tensor::CloneFrom -> shape mismatch.\n");
+    }
     for (int i=0; i<it_->shape.size(); i++) {
-        if (it_->shape[i] != in.shape[i]) {
+        if (it_->shape[i] != target->shape[i]) {
             ECAS_LOGE("Tensor::CloneFrom -> shape mismatch.\n");
-            exit(-1);
         }
     }
+}
+
+void Tensor::CopyFrom(ITensor &in) {
+    // Check dimension.
+    CheckDimension(&in);
     // Check memory type,
     if (it_->mem_type != in.mem_type) {
         ECAS_LOGE("Tensor::CloneFrom -> memory type mismatch.\n");
-        exit(-1);
     }
 
     memcpy(it_->data, in.data, size_);
@@ -61,16 +66,10 @@ void Tensor::CopyFrom(ITensor &in) {
 
 void Tensor::CopyTo(ITensor *out) {
     // Check dimension.
-    for (int i=0; i<it_->shape.size(); i++) {
-        if (it_->shape[i] != out->shape[i]) {
-            ECAS_LOGE("Tensor::CopyTo -> shape mismatch.\n");
-            exit(-1);
-        }
-    }
+    CheckDimension(out);
     // Check memory type,
     if (it_->mem_type != out->mem_type) {
         ECAS_LOGE("Tensor::CopyTo -> memory type mismatch.\n");
-        exit(-1);
     }
 
     memcpy(out->data, it_->data, size_);
