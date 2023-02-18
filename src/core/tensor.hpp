@@ -28,7 +28,7 @@ public:
 
     inline ITensor *GetITensorPtr() { return it_; }
 
-    void CopyFrom(ITensor &in);
+    void CopyFrom(ITensor *in);
     void CopyTo(ITensor *out);
 
 private:

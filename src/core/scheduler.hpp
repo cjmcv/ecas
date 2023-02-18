@@ -25,10 +25,7 @@ public:
 
     void MarkGroupId(Node *node, int group_id);
     void UpdateGroups();
-    
-    ////////////////////////
-    /// Tensors management
-    void SetupTensors(Node *input_node, Node *output_node);
+    void GetGraphNodes(std::vector<Node *> &graph_nodes);
 
     ////////////////////////
     /// Serial Execution
@@ -45,21 +42,8 @@ public:
     inline int group_size() { return groups_.size(); }
     // inline std::vector<std::vector<Node *>> &group_nodes() { return groups_; };
     void TasksSpawn();
-    void TasksStop();
+    void TasksStop(TensorPool *pool);
     void TasksJoin();
-
-    ////////////////////////
-    /// Profiler
-    void StartProfile();
-    void EndProfile();
-
-private:
-    // Setup tensors for cross node interaction.
-    void SetupIoTensors(Node *input_node, Node *output_node);
-    // Check whether the shapes match and create tensors for node interaction.
-    void SetupInteractTensors();
-    // Adjust the order of Tensors to make it consistent with the name order of input and output nodes.
-    void ReorderTensors();
 
 private:
     /// Serial Execution
@@ -72,10 +56,6 @@ private:
 
     std::vector<std::thread> threads_;
     bool is_stop_;
-
-    // //
-    TensorPool *tensor_pool_;
-    bool is_profiler_start_;
 };
 
 }  // end of namespace ecas.

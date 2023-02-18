@@ -44,6 +44,24 @@ Tensor *TensorPool::CreateTensor(std::vector<int> &shape) {
     return t;
 }
 
+ITensor *TensorPool::CreateITensor(std::vector<int> &shape) {
+    ITensor *t = new ITensor;
+    t->shape = shape;
+    t->id = 0;
+    t->mem_type = MEMORY_HOST;
+    int size = 1;
+    for (int i=0; i < shape.size(); i++) {
+        size *= shape[i];
+    }
+    if (size == 0) {
+        printf("TensorPool::CreateITensor -> size == 0.\n");
+        std::abort();        
+    }
+    t->data = (char *)malloc(size);
+    itensors_.push_back(t);
+    return t;
+}
+
 void TensorPool::PrintInfo() {
     ECAS_LOGS("TensorPool info:\n");
     for (int i = 0; i < bq_pairs_.size(); i++) {

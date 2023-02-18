@@ -18,7 +18,7 @@ struct BlockingQueuePair {
     util::BlockingQueue<Tensor *> free;
     util::BlockingQueue<Tensor *> full;
 
-    void Enqueue(ITensor &input) {
+    void Enqueue(ITensor *input) {
         Tensor *inside_free;
         free.wait_and_pop(&inside_free);
         inside_free->CopyFrom(input);
@@ -46,6 +46,7 @@ public:
     ~TensorPool();
     BlockingQueuePair *CreateBlockingQueue(std::vector<int> &shape);
     Tensor *CreateTensor(std::vector<int> &shape);
+    ITensor *CreateITensor(std::vector<int> &shape);
 
     void PrintInfo();
     void ExitAllBlockingQueue();
@@ -53,6 +54,7 @@ public:
 private:
     std::vector<BlockingQueuePair *> bq_pairs_;
     std::vector<Tensor *> tensors_;
+    std::vector<ITensor *> itensors_;
 };
 
 }  // end of namespace ecas.

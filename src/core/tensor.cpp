@@ -53,15 +53,15 @@ void Tensor::CheckDimension(ITensor *target) {
     }
 }
 
-void Tensor::CopyFrom(ITensor &in) {
+void Tensor::CopyFrom(ITensor *in) {
     // Check dimension.
-    CheckDimension(&in);
+    CheckDimension(in);
     // Check memory type,
-    if (it_->mem_type != in.mem_type) {
+    if (it_->mem_type != in->mem_type) {
         ECAS_LOGE("Tensor::CloneFrom -> memory type mismatch.\n");
     }
 
-    memcpy(it_->data, in.data, size_);
+    memcpy(it_->data, in->data, size_);
 }
 
 void Tensor::CopyTo(ITensor *out) {

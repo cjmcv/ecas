@@ -40,26 +40,16 @@ int main() {
     // session->Group({{"n1", "n2", "n3"}});
     session->ShowInfo();
 
-    // session->GetNodeIO("n1", Tenosr *in, Tensor *out);
-
-    ecas::ITensor in;
-    in.data = (char *)malloc(sizeof(float) * 2);
-    float *a = (float *)in.data;
-    a[0] = 1; a[1] = 2;
-    in.shape = {2};
-    in.mem_type = ecas::MEMORY_HOST;
-
-    ecas::ITensor out;
-    out.data = (char *)malloc(sizeof(float) * 2);
-    out.shape = {2};
-    out.mem_type = ecas::MEMORY_HOST;
+    ecas::ITensor *in = session->CreateITensor({2});
+    in->data[0] = 1; in->data[1] = 2;
+    ecas::ITensor *out = session->CreateITensor({2});
 
     session->Start();
     for (int i=0; i<5; i++) {
-        session->Feed(in);
+        session->GraphFeed(in);
     }
     for (int i=0; i<5; i++) {
-        session->GetResult(&out);
+        session->GraphGetResult(out);
     }
     std::this_thread::sleep_for(std::chrono::seconds(2));
     printf("Call stop.\n");

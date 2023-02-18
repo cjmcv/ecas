@@ -1,1 +1,1 @@
-# ECAS - Edge AI Computing Acceleration Subprograms
+# ECAS - Edge AI Computing Auxiliary Subprograms

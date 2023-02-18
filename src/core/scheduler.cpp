@@ -11,13 +11,10 @@ namespace ecas {
 
 Scheduler::Scheduler() {
     is_stop_ = false;
-    is_profiler_start_ = false;
     groups_.clear();
-    tensor_pool_ = new TensorPool;
 }
 
 Scheduler::~Scheduler() {
-    delete tensor_pool_;
 }
 
 // TODO: 可以有缺省id号，在未设置id号时，自动给其新增一个只有它自己的group。
@@ -42,98 +39,13 @@ void Scheduler::UpdateGroups() {
     }
 }
 
-////////////////////////
-/// Tensors Setup
-void Scheduler::SetupIoTensors(Node *input_node, Node *output_node) {
-    if (input_node == nullptr || output_node == nullptr)
-        ECAS_LOGE("SetupIoTensors -> Both input and output nodes must exist.\n");
-    if (input_node->input_shapes().size() != 1 || output_node->output_shapes().size() != 1)
-        ECAS_LOGE("SetupIoTensors -> Input node has one input, output node has one output.\n");
-
-    BlockingQueuePair *bqp;
-    bqp = tensor_pool_->CreateBlockingQueue(input_node->input_shapes()[0]);
-    bqp->front_name = "input";
-    bqp->rear_name = input_node->name();
-    input_node->AppendInputs(bqp);
-
-    bqp = tensor_pool_->CreateBlockingQueue(output_node->output_shapes()[0]);
-    bqp->front_name = output_node->name();
-    bqp->rear_name = "output";
-    output_node->AppendOutputs(bqp);
-}
-
-void Scheduler::SetupInteractTensors() {
-    // Only nodes in the group are valid
+void Scheduler::GetGraphNodes(std::vector<Node *> &graph_nodes) {
+    graph_nodes.clear();
     for (int i = 0; i < groups_.size(); i++) {
         for (int j = 0; j < groups_[i].size(); j++) {
-            Node *n = (Node *)groups_[i][j];
-            std::vector<std::vector<int>> input_shapes = n->input_shapes();
-            std::vector<Node *> *input_nodes = n->input_nodes();
-
-            // if input_nodes == nullptr, it indicates that it is an input node of the graph 
-            // and does not need to check the output shape.
-            if (input_nodes == nullptr) {
-                continue;
-            }
-
-            // The number of input shapes and input nodes should be the same.
-            if (input_nodes->size() != input_shapes.size())
-                ECAS_LOGE("SetupInteractTensors -> output_nodes->size() != output_shapes.size(): %d vs %d.\n",
-                          input_nodes->size(), input_shapes.size());
-
-            // Check each of input nodes.
-            for (int si = 0; si < input_nodes->size(); si++) {
-                Node *in_node = (*input_nodes)[si];
-                std::vector<std::vector<int>> need_match_shapes = in_node->output_shapes();
-
-                if (need_match_shapes.size() == 1) {
-                    if (need_match_shapes[0] != input_shapes[si]) {
-                        ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
-                                  n->name().c_str(), in_node->name().c_str());
-                    }
-                }
-                else if (need_match_shapes.size() > 1) {
-                    // TODO: 目前其中一个能匹配就算匹配上了，但实际上看可能会在a+b=>c时，a和b的输出维度一致和c的其中一个输入吻合，c的另一个不吻合，则应该是不匹配的。但目前的策略是会判断为匹配的。
-                    bool is_pass = false;
-                    for (int ni = 0; ni < need_match_shapes.size(); ni++) {
-                        if (need_match_shapes[ni] == input_shapes[si])
-                            is_pass = true;
-                    }
-                    if (is_pass == false) {
-                        ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
-                                  n->name().c_str(), in_node->name().c_str());
-                    }
-                }
-                else {
-                    ECAS_LOGE("SetupInteractTensors -> Shape check failed: need_match_shapes.size() <= 0 \
-                                  (node %s to %s).\n",
-                              n->name().c_str(), in_node->name().c_str());
-                }
-                // Check passed and allocate BlockingQueuePair.
-                BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(input_shapes[si]);
-                bqp->front_name = in_node->name();
-                bqp->rear_name = n->name();
-                in_node->AppendOutputs(bqp);
-                n->AppendInputs(bqp);
-            }
+            graph_nodes.push_back((Node *)groups_[i][j]);
         }
     }
-}
-
-void Scheduler::ReorderTensors() {
-    for (int i = 0; i < groups_.size(); i++) {
-        for (int j = 0; j < groups_[i].size(); j++) {
-            Node *n = (Node *)groups_[i][j];
-            n->ReorderInputQueues();
-            n->ReorderOutputQueues();
-        }
-    }
-}
-
-void Scheduler::SetupTensors(Node *input_node, Node *output_node) {
-    SetupInteractTensors();
-    SetupIoTensors(input_node, output_node);    
-    ReorderTensors();
 }
 
 ////////////////////////
@@ -220,34 +132,15 @@ void Scheduler::TasksSpawn() {
     }
 }
 
-void Scheduler::TasksStop() {
+void Scheduler::TasksStop(TensorPool *pool) {
     is_stop_ = true;
-    tensor_pool_->ExitAllBlockingQueue();
+    pool->ExitAllBlockingQueue();
 }
 
 void Scheduler::TasksJoin() {
     for (auto& t : threads_) {
         t.join();
     }
-}
-
-////////////////////////
-/// Profiler
-void Scheduler::StartProfile() {
-    if (is_profiler_start_ == true)
-        return;
-
-    is_profiler_start_ = true;
-    std::thread *t = new std::thread([this]() -> void {
-        while (is_profiler_start_ == true) {
-            tensor_pool_->PrintInfo();
-            std::this_thread::sleep_for(std::chrono::seconds(3));
-        }
-    });
-}
-
-void Scheduler::EndProfile() {
-    is_profiler_start_ = false;
 }
 
 }  // end of namespace ecas.
