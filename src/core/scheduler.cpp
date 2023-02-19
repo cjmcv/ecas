@@ -110,26 +110,27 @@ void Scheduler::TasksSpawn() {
     }
 
     std::vector<std::vector<Node *>> &groups = groups_;
+    printf("group size: %d.\n", groups_.size());
     for (unsigned i = 0; i < groups.size(); ++i) {
         threads_.emplace_back([this, i, groups]() -> void {
             std::vector<ITensor *> inputs;
             std::vector<ITensor *> outputs;
-
             while (!is_stop_) {
                 // 同一组的按顺序堵塞执行，不会有帧差
                 for (int ni=0; ni<groups[i].size(); ni++) {
                     Node *n = groups[i][ni];
-                    printf("Start BorrowIo: %s.\n", n->name().c_str());
+                    // printf("Start BorrowIo: %s.\n", n->name().c_str());
                     bool ret = n->BorrowIo(inputs, outputs);
                     if (ret == false) break;
-                    printf("%s -> (%d, %d).\n", n->name().c_str(), inputs.size(), outputs.size());
+                    // printf("%s -> (%d, %d).\n", n->name().c_str(), inputs.size(), outputs.size());
                     n->Run(inputs, outputs);
                     n->RecycleIo();
                 } 
             }
-            printf("group: %d, is_stop_: %d.\n", i, is_stop_);
+            ECAS_LOGI("is_stop_: %d.\n", is_stop_);
         });
     }
+    ECAS_LOGI("Scheduler::TasksSpawn End.\n");
 }
 
 void Scheduler::TasksStop(TensorPool *pool) {

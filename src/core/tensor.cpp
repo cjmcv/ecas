@@ -60,7 +60,7 @@ void Tensor::CopyFrom(ITensor *in) {
     if (it_->mem_type != in->mem_type) {
         ECAS_LOGE("Tensor::CloneFrom -> memory type mismatch.\n");
     }
-
+    it_->id = in->id;
     memcpy(it_->data, in->data, size_);
 }
 
@@ -71,7 +71,7 @@ void Tensor::CopyTo(ITensor *out) {
     if (it_->mem_type != out->mem_type) {
         ECAS_LOGE("Tensor::CopyTo -> memory type mismatch.\n");
     }
-
+    out->id = it_->id;
     memcpy(out->data, it_->data, size_);
 }
 

@@ -289,14 +289,14 @@ void AsyncGraph::EndProfile() {
 void AsyncGraph::Start() {
     // Start all task threads.
     scheduler_.TasksSpawn();
-    StartProfile();      
+    // StartProfile();      
 }
 
 void AsyncGraph::Stop() {        
     // Stop all task threads.
     scheduler_.TasksStop(tensor_pool_);
     scheduler_.TasksJoin();
-    EndProfile();
+    // EndProfile();
     ECAS_LOGI("AsyncGraph::Stop().\n");
 }
 

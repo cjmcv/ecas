@@ -3,6 +3,7 @@
 */
 
 #include "node.hpp"
+#include "util/logger.hpp"
 
 namespace ecas {
 
@@ -62,24 +63,24 @@ bool Node::CheckIoIsReady() {
 
 bool Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
     input_tensors_.clear();
-    printf("input_queues_.size: %d.\n", input_queues_.size());
+    // printf("input_queues_.size: %d.\n", input_queues_.size());
     for (int i=0; i<input_queues_.size(); i++) {
         Tensor *inside_full;
-        printf("input_queues_[%d]->full.size : %d.\n", i, input_queues_[i]->full.size());
+        // printf("input_queues_[%d]->full.size : %d.\n", i, input_queues_[i]->full.size());
         bool is_ready = input_queues_[i]->full.wait_and_pop(&inside_full);
         if (!is_ready) return false;
         input_tensors_.push_back(inside_full);
     }
     output_tensors_.clear();
-    printf("output_queues_.size: %d.\n", output_queues_.size());
+    // printf("output_queues_.size: %d.\n", output_queues_.size());
     for (int i=0; i<output_queues_.size(); i++) {
         Tensor *inside_free;
-        printf("output_queues_[%d]->free.size : %d.\n", i, output_queues_[i]->free.size());
+        // printf("output_queues_[%d]->free.size : %d.\n", i, output_queues_[i]->free.size());
         bool is_ready = output_queues_[i]->free.wait_and_pop(&inside_free);
         if (!is_ready) return false;
         output_tensors_.push_back(inside_free);
     }
-    //
+    // Get ITensor
     inputs.clear();
     for (int i=0; i<input_tensors_.size(); i++) {
         ITensor *it = input_tensors_[i]->GetITensorPtr();
@@ -89,6 +90,16 @@ bool Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outp
     for (int i=0; i<output_tensors_.size(); i++) {
         ITensor *it = output_tensors_[i]->GetITensorPtr();
         outputs.push_back(it);
+    }
+    // Check id
+    for (int i=1; i<inputs.size(); i++) {
+        if (inputs[i]->id != inputs[0]->id) {
+            ECAS_LOGE("Node::BorrowIo -> The ID of Tensor in the same group is inconsistent.\n");
+        }
+    }
+    // Pass id
+    for (int i=0; i<outputs.size(); i++) {
+        outputs[i]->id = inputs[0]->id;
     }
     return true;
 }

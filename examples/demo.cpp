@@ -4,19 +4,19 @@
 
 void TaskA(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     static int count = 0;
-    printf("TaskA: %d.\n", count++);
+    printf("TaskA: %d (%d).\n", count++, std::this_thread::get_id());
 }
 void TaskB(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     static int count = 0;
-    printf("TaskB: %d.\n", count++);
+    printf("TaskB: %d (%d).\n", count++, std::this_thread::get_id());
 }
 void TaskC(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     static int count = 0;
-    printf("TaskC: %d.\n", count++);
+    printf("TaskC: %d (%d).\n", count++, std::this_thread::get_id());
 }
 void TaskD(std::vector<ecas::ITensor *> &input, std::vector<ecas::ITensor *> &output) {
     static int count = 0;
-    printf("TaskD: %d.\n", count++);
+    printf("TaskD: %d (%d).\n", count++, std::this_thread::get_id());
 }
 
 int main() {
@@ -46,10 +46,12 @@ int main() {
 
     session->Start();
     for (int i=0; i<5; i++) {
+        in->id = i;
         session->GraphFeed(in);
     }
     for (int i=0; i<5; i++) {
         session->GraphGetResult(out);
+        printf("out id: %d.\n", out->id);
     }
     std::this_thread::sleep_for(std::chrono::seconds(2));
     printf("Call stop.\n");
