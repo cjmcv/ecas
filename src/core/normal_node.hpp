@@ -14,8 +14,8 @@ class NormalNode: public Node {
     
 public:
     NormalNode(const std::string &name, Task &&task,
-               std::vector<std::vector<int>> &input_shapes,
-               std::vector<std::vector<int>> &output_shapes);
+               std::vector<std::vector<int>> &input_dims, 
+               std::vector<std::vector<int>> &output_dims);
     ~NormalNode();
 
     virtual void Run(std::vector<ITensor *> &input, std::vector<ITensor *> &output) { task_(input, output); }

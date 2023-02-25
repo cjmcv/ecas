@@ -6,14 +6,18 @@
 
 #include <string.h>
 #include "util/logger.hpp"
+#include "util/common.hpp"
 
 namespace ecas {
 
-Tensor::Tensor(std::vector<int> &shape) {
+Tensor::Tensor(std::vector<int> &shape, DataType type) {
     it_ = new ITensor();
+    it_->id = -1;
     it_->shape = shape;
+    it_->type = type;
+    it_->mode = ON_HOST;
 
-    size_ = 1;
+    TYPE_SWITCH(type, T, size_ = sizeof(T););
     for (int i=0; i < shape.size(); i++) {
         size_ *= shape[i];
     }
@@ -23,7 +27,7 @@ Tensor::Tensor(std::vector<int> &shape) {
     buffer_ = new Buffer(size_);
     it_->data = (char *)buffer_->data();
 
-    it_->mem_type = MEMORY_HOST;
+    it_->mode = ON_HOST;
 }
 
 // Tensor::Tensor(ITensor &in) {
@@ -57,7 +61,7 @@ void Tensor::CopyFrom(ITensor *in) {
     // Check dimension.
     CheckDimension(in);
     // Check memory type,
-    if (it_->mem_type != in->mem_type) {
+    if (it_->mode != in->mode) {
         ECAS_LOGE("Tensor::CloneFrom -> memory type mismatch.\n");
     }
     it_->id = in->id;
@@ -68,7 +72,7 @@ void Tensor::CopyTo(ITensor *out) {
     // Check dimension.
     CheckDimension(out);
     // Check memory type,
-    if (it_->mem_type != out->mem_type) {
+    if (it_->mode != out->mode) {
         ECAS_LOGE("Tensor::CopyTo -> memory type mismatch.\n");
     }
     out->id = it_->id;

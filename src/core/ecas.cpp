@@ -30,13 +30,13 @@ Session::~Session() {
 }
 
 void Session::CreateNode(const std::string &name, Task &&task, 
-                         std::vector<std::vector<int>> &&input_shapes, 
-                         std::vector<std::vector<int>> &&output_shapes, 
+                         std::vector<std::vector<int>> &&input_dims, 
+                         std::vector<std::vector<int>> &&output_dims, 
                          int group_id) {
     SessionParams *p = (SessionParams *)params_;                        
     p->graph->CreateNode(name, std::forward<Task>(task), 
-                         std::forward<std::vector<std::vector<int>>>(input_shapes), 
-                         std::forward<std::vector<std::vector<int>>>(output_shapes), 
+                         std::forward<std::vector<std::vector<int>>>(input_dims), 
+                         std::forward<std::vector<std::vector<int>>>(output_dims), 
                          group_id);
 }
 
@@ -77,9 +77,10 @@ void Session::GraphGetResult(ITensor *out) {
 
 //
 
-ITensor *Session::CreateITensor(std::vector<int> &&shape) {
+ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type) {
     SessionParams *p = (SessionParams *)params_;
-    return p->tensor_pool_->CreateITensor(shape);
+    Tensor *t = p->tensor_pool_->CreateTensor(shape, type);
+    return t->GetITensorPtr();
 }
 
 } // ecas.

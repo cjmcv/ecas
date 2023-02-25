@@ -22,7 +22,7 @@ namespace ecas {
 class Tensor {
 
 public:
-    Tensor(std::vector<int> &shape);
+    Tensor(std::vector<int> &shape, DataType type);
     // Tensor(ITensor &in);
     ~Tensor();
 

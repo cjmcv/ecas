@@ -30,9 +30,17 @@ enum OpTag {
     VECTOR_ADD, 
 };
 
-enum MemoryType {
-    MEMORY_HOST = 0,
-    MEMORY_DEVICE, 
+enum DataType {
+    FP32 = 0,
+    FP16 = 1,
+    INT32 = 2,
+    INT16 = 3,
+    INT8 = 4
+};
+
+enum MemoryMode {
+    ON_HOST = 0,
+    ON_DEVICE, 
 };
 
 struct SessionConfig {
@@ -40,14 +48,16 @@ struct SessionConfig {
     int num_thread;
 };
 
-struct ITensor {
-    MemoryType mem_type;
+struct ITensor {    
     int id;
-    char *data;
     std::vector<int> shape;
+
+    MemoryMode mode;
+    DataType type;
+    void *data;
 };
 
-using Task = std::function<void(std::vector<ITensor *> &input, std::vector<ITensor *> &output)>;
+using Task = std::function<void(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
 
 // Session
 class ECAS_API Session {
@@ -56,8 +66,8 @@ public:
     ~Session();
 
     void CreateNode(const std::string &name, Task &&task, 
-                    std::vector<std::vector<int>> &&in_shapes, 
-                    std::vector<std::vector<int>> &&out_shapes,
+                    std::vector<std::vector<int>> &&input_dims, 
+                    std::vector<std::vector<int>> &&output_dims, 
                     int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
     void BuildGraph(std::vector<std::vector<std::string>> &&relation);
@@ -71,7 +81,7 @@ public:
     // Get the result after calling the Feed.
     void GraphGetResult(ITensor *out);
 
-    ITensor *CreateITensor(std::vector<int> &&shape);
+    ITensor *CreateITensor(std::vector<int> &&shape, DataType type);
     
 private:
     void *params_;

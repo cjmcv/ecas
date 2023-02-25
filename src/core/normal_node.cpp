@@ -11,13 +11,13 @@ void TaskB(void *in, void *out) {
 }
 
 NormalNode::NormalNode(const std::string &name, Task &&task,
-                       std::vector<std::vector<int>> &input_shapes,
-                       std::vector<std::vector<int>> &output_shapes) {
+                       std::vector<std::vector<int>> &input_dims, 
+                       std::vector<std::vector<int>> &output_dims) {
     name_ = name;
     task_ = task;
 
-    input_shapes_ = input_shapes;
-    output_shapes_ = output_shapes;
+    input_dims_ = input_dims;
+    output_dims_ = output_dims;
 }
 
 NormalNode::~NormalNode() {

@@ -30,8 +30,8 @@ public:
     inline std::vector<Node *> *input_nodes() { return input_nodes_; }
     inline std::vector<Node *> *output_nodes() { return output_nodes_; }
 
-    inline std::vector<std::vector<int>> &input_shapes() { return input_shapes_; }
-    inline std::vector<std::vector<int>> &output_shapes() { return output_shapes_; }
+    inline std::vector<std::vector<int>> &input_dims() { return input_dims_; }
+    inline std::vector<std::vector<int>> &output_dims() { return output_dims_; }
 
     inline void AppendInputs(BlockingQueuePair *bq) { input_queues_.push_back(bq); }
     inline void AppendOutputs(BlockingQueuePair *bq) { output_queues_.push_back(bq); }
@@ -55,8 +55,9 @@ protected:
     std::vector<Node *> *input_nodes_;
     std::vector<Node *> *output_nodes_;
 
-    std::vector<std::vector<int>> input_shapes_;
-    std::vector<std::vector<int>> output_shapes_;
+    // 0: data_type, 1, 2, 3...
+    std::vector<std::vector<int>> input_dims_;
+    std::vector<std::vector<int>> output_dims_;
 
     std::vector<BlockingQueuePair *> input_queues_; // It is also part of the output of the input node 
     std::vector<BlockingQueuePair *> output_queues_; // It is also part of the input of the output node

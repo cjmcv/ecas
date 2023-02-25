@@ -28,37 +28,19 @@ TensorPool::~TensorPool() {
     std::vector<BlockingQueuePair *>().swap(bq_pairs_);
 }
 
-BlockingQueuePair *TensorPool::CreateBlockingQueue(std::vector<int> &shape) {
+BlockingQueuePair *TensorPool::CreateBlockingQueue(std::vector<int> &shape, DataType type) {
     BlockingQueuePair *bqp = new BlockingQueuePair;
     for (int i=0; i<ECAS_BLOCKING_QUEUE_SIZE; i++) {
-        Tensor *t = new Tensor(shape);
+        Tensor *t = new Tensor(shape, type);
         bqp->free.push(t);
     }
     bq_pairs_.push_back(bqp);
     return bqp;
 }
 
-Tensor *TensorPool::CreateTensor(std::vector<int> &shape) {
-    Tensor *t = new Tensor(shape);
+Tensor *TensorPool::CreateTensor(std::vector<int> &shape, DataType type) {
+    Tensor *t = new Tensor(shape, type);
     tensors_.push_back(t);
-    return t;
-}
-
-ITensor *TensorPool::CreateITensor(std::vector<int> &shape) {
-    ITensor *t = new ITensor;
-    t->shape = shape;
-    t->id = 0;
-    t->mem_type = MEMORY_HOST;
-    int size = 1;
-    for (int i=0; i < shape.size(); i++) {
-        size *= shape[i];
-    }
-    if (size == 0) {
-        printf("TensorPool::CreateITensor -> size == 0.\n");
-        std::abort();        
-    }
-    t->data = (char *)malloc(size);
-    itensors_.push_back(t);
     return t;
 }
 

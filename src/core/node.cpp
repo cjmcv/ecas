@@ -105,6 +105,7 @@ bool Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outp
 }
 
 void Node::RecycleIo() {
+    // TODO: 按需进行异步的跨设备内存拷贝。
     for (int i=0; i<input_queues_.size(); i++) {
         input_queues_[i]->free.push(input_tensors_[i]);
     }

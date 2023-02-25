@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <mutex>
 
 namespace ecas {
 namespace util {
@@ -43,8 +44,11 @@ private:
         util::Logger *log = util::Logger::GetInstance();                      \
         if (level < util::Logger::min_log_level_)                             \
             break;                                                            \
+        static std::mutex m;                                                  \
+        m.lock();                                                             \
         sprintf(log->buffer(), format, ##__VA_ARGS__);                        \
         log->GenerateLogMessage(__FILE__, __LINE__, level);                   \
+        m.unlock();                                                           \
     } while (0)
 
 #define ECAS_LOGS(format, ...)      ECAS_LOG_BODY(util::LogLevel::INFO_SIMPLE, format, ##__VA_ARGS__);

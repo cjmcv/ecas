@@ -44,17 +44,15 @@ struct BlockingQueuePair {
 class TensorPool {
 public:
     ~TensorPool();
-    BlockingQueuePair *CreateBlockingQueue(std::vector<int> &shape);
-    Tensor *CreateTensor(std::vector<int> &shape);
-    ITensor *CreateITensor(std::vector<int> &shape);
+    BlockingQueuePair *CreateBlockingQueue(std::vector<int> &shape, DataType type);
+    Tensor *CreateTensor(std::vector<int> &shape, DataType type);
 
     void PrintInfo();
     void ExitAllBlockingQueue();
 
 private:
     std::vector<BlockingQueuePair *> bq_pairs_;
-    std::vector<Tensor *> tensors_;
-    std::vector<ITensor *> itensors_;
+    std::vector<Tensor *> tensors_; // 添加Itensor与tensor映射，可通过Itensor找回tensor。
 };
 
 }  // end of namespace ecas.

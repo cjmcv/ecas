@@ -42,10 +42,10 @@ AsyncGraph::~AsyncGraph() {
 }
 
 void AsyncGraph::CreateNode(const std::string &name, Task &&task, 
-                         std::vector<std::vector<int>> &&input_shapes, 
-                         std::vector<std::vector<int>> &&output_shapes, 
-                         int group_id) {
-    Node *n = new NormalNode(name, std::forward<Task>(task), input_shapes, output_shapes);
+                            std::vector<std::vector<int>> &&input_dims,
+                            std::vector<std::vector<int>> &&output_dims,
+                            int group_id) {
+    Node *n = new NormalNode(name, std::forward<Task>(task), input_dims, output_dims);
 
     scheduler_.MarkGroupId(n, group_id);
     nodes_.insert(std::make_pair(name, n));
@@ -60,7 +60,7 @@ void AsyncGraph::CreateNode(const std::string &name, std::vector<std::vector<std
 void AsyncGraph::SetupInteractTensors() {
     for (int i = 0; i < graph_nodes_.size(); i++) {
         Node *n = graph_nodes_[i];
-        std::vector<std::vector<int>> input_shapes = n->input_shapes();
+        std::vector<std::vector<int>> input_dims = n->input_dims();
         std::vector<Node *> *input_nodes = n->input_nodes();
 
         // if input_nodes == nullptr, it indicates that it is an input node of the graph
@@ -70,26 +70,26 @@ void AsyncGraph::SetupInteractTensors() {
         }
 
         // The number of input shapes and input nodes should be the same.
-        if (input_nodes->size() != input_shapes.size())
-            ECAS_LOGE("SetupInteractTensors -> output_nodes->size() != output_shapes.size(): %d vs %d.\n",
-                      input_nodes->size(), input_shapes.size());
+        if (input_nodes->size() != input_dims.size())
+            ECAS_LOGE("SetupInteractTensors -> output_nodes->size() != output_dims.size(): %d vs %d.\n",
+                      input_nodes->size(), input_dims.size());
 
         // Check each of input nodes.
         for (int si = 0; si < input_nodes->size(); si++) {
             Node *in_node = (*input_nodes)[si];
-            std::vector<std::vector<int>> need_match_shapes = in_node->output_shapes();
+            std::vector<std::vector<int>> need_match_dims = in_node->output_dims();
 
-            if (need_match_shapes.size() == 1) {
-                if (need_match_shapes[0] != input_shapes[si]) {
+            if (need_match_dims.size() == 1) {
+                if (need_match_dims[0] != input_dims[si]) {
                     ECAS_LOGE("SetupInteractTensors -> Shape check failed (node %s to %s).\n",
                               n->name().c_str(), in_node->name().c_str());
                 }
             }
-            else if (need_match_shapes.size() > 1) {
+            else if (need_match_dims.size() > 1) {
                 // TODO: 目前其中一个能匹配就算匹配上了，但实际上看可能会在a+b=>c时，a和b的输出维度一致和c的其中一个输入吻合，c的另一个不吻合，则应该是不匹配的。但目前的策略是会判断为匹配的。
                 bool is_pass = false;
-                for (int ni = 0; ni < need_match_shapes.size(); ni++) {
-                    if (need_match_shapes[ni] == input_shapes[si])
+                for (int ni = 0; ni < need_match_dims.size(); ni++) {
+                    if (need_match_dims[ni] == input_dims[si])
                         is_pass = true;
                 }
                 if (is_pass == false) {
@@ -98,12 +98,13 @@ void AsyncGraph::SetupInteractTensors() {
                 }
             }
             else {
-                ECAS_LOGE("SetupInteractTensors -> Shape check failed: need_match_shapes.size() <= 0 \
-                                  (node %s to %s).\n",
-                          n->name().c_str(), in_node->name().c_str());
+                ECAS_LOGE("SetupInteractTensors -> Shape check failed: need_match_dims.size() <= 0 \
+                          (node %s to %s).\n", n->name().c_str(), in_node->name().c_str());
             }
             // Check passed and allocate BlockingQueuePair.
-            BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(input_shapes[si]);
+            std::vector<int> tensor_shapes;
+            tensor_shapes.assign(input_dims[si].begin() + 1, input_dims[si].end());
+            BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(tensor_shapes, (DataType)input_dims[si][0]);
             bqp->front_name = in_node->name();
             bqp->rear_name = n->name();
             in_node->AppendOutputs(bqp);
@@ -115,16 +116,21 @@ void AsyncGraph::SetupInteractTensors() {
 void AsyncGraph::SetupIoTensors() {
     if (input_node_ == nullptr || output_node_ == nullptr)
         ECAS_LOGE("SetupIoTensors -> Both input and output nodes must exist.\n");
-    if (input_node_->input_shapes().size() != 1 || output_node_->output_shapes().size() != 1)
+    if (input_node_->input_dims().size() != 1 || output_node_->output_dims().size() != 1)
         ECAS_LOGE("SetupIoTensors -> Input node has one input, output node has one output.\n");
 
+    std::vector<int> tensor_shapes;
     BlockingQueuePair *bqp;
-    bqp = tensor_pool_->CreateBlockingQueue(input_node_->input_shapes()[0]);
+
+    // Skip data type saved in shape[0].
+    tensor_shapes.assign(input_node_->input_dims()[0].begin() + 1, input_node_->input_dims()[0].end());
+    bqp = tensor_pool_->CreateBlockingQueue(tensor_shapes, (DataType)input_node_->input_dims()[0][0]);
     bqp->front_name = "input";
     bqp->rear_name = input_node_->name();
     input_node_->AppendInputs(bqp);
 
-    bqp = tensor_pool_->CreateBlockingQueue(output_node_->output_shapes()[0]);
+    tensor_shapes.assign(output_node_->output_dims()[0].begin() + 1, output_node_->output_dims()[0].end());
+    bqp = tensor_pool_->CreateBlockingQueue(tensor_shapes, (DataType)output_node_->output_dims()[0][0]);
     bqp->front_name = output_node_->name();
     bqp->rear_name = "output";
     output_node_->AppendOutputs(bqp);
@@ -178,6 +184,7 @@ void AsyncGraph::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
     SetupInteractTensors();
     SetupIoTensors();
     ReorderTensors();
+    ECAS_LOGI("Finish AsyncGraph::BuildGraph.\n");
 }
 
 //// It will determine the thread allocation scheme.
@@ -198,22 +205,24 @@ void AsyncGraph::ShowInfo() {
         std::vector<Node *> *ins = n->input_nodes();
         std::vector<Node *> *outs = n->output_nodes();
         ECAS_LOGS("node: %s (%d) -> in: [", n->name().c_str(), n);
-        for (int i = 0; i<n->input_shapes().size(); i++) {
-            ECAS_LOGS("(");
-            for (int j=0; j<n->input_shapes()[i].size(); j++) {
-                ECAS_LOGS("%d", n->input_shapes()[i][j]);
-                if (j != n->input_shapes()[i].size() - 1) ECAS_LOGS(",");
+        for (int i = 0; i<n->input_dims().size(); i++) {
+            ECAS_LOGS("%d(", n->input_dims()[i][0]);
+            for (int j=1; j<n->input_dims()[i].size(); j++) {
+                ECAS_LOGS("%d", n->input_dims()[i][j]);
+                if (j != n->input_dims()[i].size() - 1) ECAS_LOGS(",");
             }
             ECAS_LOGS(")");
+            if (i != n->input_dims().size() - 1) ECAS_LOGS(",");
         }
         ECAS_LOGS("], out: [");
-        for (int i = 0; i<n->output_shapes().size(); i++) {
-            ECAS_LOGS("(");
-            for (int j=0; j<n->output_shapes()[i].size(); j++) {
-                ECAS_LOGS("%d", n->output_shapes()[i][j]);
-                if (j != n->output_shapes()[i].size() - 1) ECAS_LOGS(",");
+        for (int i = 0; i<n->output_dims().size(); i++) {
+            ECAS_LOGS("%d(", n->output_dims()[i][0]);
+            for (int j=1; j<n->output_dims()[i].size(); j++) {
+                ECAS_LOGS("%d", n->output_dims()[i][j]);
+                if (j != n->output_dims()[i].size() - 1) ECAS_LOGS(",");
             }
             ECAS_LOGS(")");
+            if (i != n->output_dims().size() - 1) ECAS_LOGS(",");
         }
         ECAS_LOGS("]\n");
     }
