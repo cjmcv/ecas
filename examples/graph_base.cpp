@@ -37,7 +37,12 @@ void TaskA(std::vector<ecas::ITensor *> &inputs, std::vector<ecas::ITensor *> &o
 // 200 * 600 -> gemm（600 * 300）-> 200 * 300 
 void TaskB(std::vector<ecas::ITensor *> &inputs, std::vector<ecas::ITensor *> &outputs) {
     static int count = 0;
-    
+
+    std::vector<ecas::ITensor *> gemm_inputs;
+    std::vector<ecas::Param> gemm_params;
+    std::vector<ecas::ITensor *> gemm_outputs;
+    ecas::Session::OpRun("gemm", gemm_params, gemm_inputs, gemm_outputs);
+
     // float *data = (float *)inputs[0]->data;
     // int rows = inputs[0]->shape[0];
     // int cols = inputs[0]->shape[1];

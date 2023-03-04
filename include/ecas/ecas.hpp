@@ -19,17 +19,6 @@ enum ExecutionMode {
     GRAPH         // Multitasking with Computational Graphs
 };
 
-enum NodeProperty {
-    COMPUTE = 0, 
-    INPUT, // 
-    OUTPUT,
-};
-
-enum OpTag {
-    CUSTOM = 0, // 
-    VECTOR_ADD, 
-};
-
 enum DataType {
     FP32 = 0,
     FP16 = 1,
@@ -57,6 +46,12 @@ struct ITensor {
     void *data;
 };
 
+union Param {
+   char cval;
+   int ival;
+   float fval;
+};
+
 using Task = std::function<void(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
 
 // Session
@@ -65,6 +60,12 @@ public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
 
+    //////////////
+    // Memory
+    ITensor *CreateITensor(std::vector<int> &&shape, DataType type);
+    
+    //////////////
+    // AsyncGraph
     void CreateNode(const std::string &name, Task &&task, 
                     std::vector<std::vector<int>> &&input_dims, 
                     std::vector<std::vector<int>> &&output_dims, 
@@ -80,8 +81,16 @@ public:
     void GraphFeed(ITensor *in);
     // Get the result after calling the Feed.
     void GraphGetResult(ITensor *out);
-
-    ITensor *CreateITensor(std::vector<int> &&shape, DataType type);
+    
+    //////////////
+    // Operator
+    // input && output.
+    static void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    // inplace.
+    static void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &ios);
+    // 手动组合部分，待后续明确通用参数
+    static void *OpRunA();
+    static void OpRunB();
     
 private:
     void *params_;

@@ -50,7 +50,6 @@ private:
 
 protected:
     std::string name_;
-    OpTag op_tag_;
 
     std::vector<Node *> *input_nodes_;
     std::vector<Node *> *output_nodes_;

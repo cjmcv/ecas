@@ -12,6 +12,7 @@ include_directories(${INCLUDE_DIR})
 file(GLOB_RECURSE SRC_LIST 
     "${CMAKE_CURRENT_LIST_DIR}/core/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/util/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/kernel/kernel_dispatcher.cpp"
     # Include
     "${INCLUDE_DIR}/*.hpp"
 )
@@ -22,6 +23,9 @@ set(ECAS_LIBS_TO_LINK "")
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/generic)
 list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_GENERIC>)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/x86)
+list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_X86>)
 
 if (ECAS_GPU_USE_VULKAN)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/vulkan)
