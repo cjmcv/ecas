@@ -4,8 +4,8 @@
 
 namespace ecas {
 
-void CpuKernelDispatcher::Init() {
-	GemmKernel = GemmV1;
+CpuKernelDispatcher::CpuKernelDispatcher() {
+	GemmKernel = Gemm;
 }
 
 } // ecas.

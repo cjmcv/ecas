@@ -104,7 +104,7 @@ void Scheduler::ShowGroups() {
     }
 }
 
-void Scheduler::TasksSpawn() {
+void Scheduler::TasksSpawn(void *usr) {
     if (groups_.size() == 0) {
         ECAS_LOGE("TasksSpawn -> groups_.size() == 0, please call function BuildGraph first.\n");
     }
@@ -112,7 +112,7 @@ void Scheduler::TasksSpawn() {
     std::vector<std::vector<Node *>> &groups = groups_;
     printf("group size: %d.\n", groups_.size());
     for (unsigned i = 0; i < groups.size(); ++i) {
-        threads_.emplace_back([this, i, groups]() -> void {
+        threads_.emplace_back([this, i, groups, usr]() -> void {
             std::vector<ITensor *> inputs;
             std::vector<ITensor *> outputs;
             while (!is_stop_) {
@@ -123,7 +123,7 @@ void Scheduler::TasksSpawn() {
                     bool ret = n->BorrowIo(inputs, outputs);
                     if (ret == false) break;
                     // printf("%s -> (%d, %d).\n", n->name().c_str(), inputs.size(), outputs.size());
-                    n->Run(inputs, outputs);
+                    n->Run(usr, inputs, outputs);
                     n->RecycleIo();
                 } 
             }

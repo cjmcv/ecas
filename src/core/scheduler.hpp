@@ -41,7 +41,7 @@ public:
     void ShowGroups();
     inline int group_size() { return groups_.size(); }
     // inline std::vector<std::vector<Node *>> &group_nodes() { return groups_; };
-    void TasksSpawn();
+    void TasksSpawn(void *usr);
     void TasksStop(TensorPool *pool);
     void TasksJoin();
 

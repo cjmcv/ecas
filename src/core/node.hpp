@@ -21,7 +21,7 @@ class Node {
 public:
     Node(): input_nodes_(nullptr), output_nodes_(nullptr) {}
     virtual ~Node() {};
-    virtual void Run(std::vector<ITensor *> &input, std::vector<ITensor *> &output) = 0;
+    virtual void Run(void *usr, std::vector<ITensor *> &input, std::vector<ITensor *> &output) = 0;
 
     inline std::string &name() { return name_; }
     inline void SetInputNodes(std::vector<Node *> *input_nodes) { input_nodes_ = input_nodes; };

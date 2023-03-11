@@ -6,6 +6,7 @@
 #define ECAS_BACKEND_OPERATOR_HPP_
 
 #include "ecas/ecas.hpp"
+#include "kernel/kernel_dispatcher.hpp"
 
 namespace ecas {
 
@@ -22,8 +23,13 @@ namespace ecas {
 class Operator {
 
 public:
-    virtual void Run(std::vector<ITensor *> &inputs, std::vector<Param> &params, std::vector<ITensor *> &outputs) = 0;
-
+    Operator(): cpu_dispatcher_(CpuKernelDispatcher::GetInstance()) {}
+    virtual bool DimCheck(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) = 0;
+    virtual void Run(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) = 0;
+    
+protected:
+    CpuKernelDispatcher *cpu_dispatcher_;
+    
 };
 
 }  // end of namespace ecas.

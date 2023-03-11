@@ -39,7 +39,7 @@ struct SessionConfig {
 
 struct ITensor {    
     int id;
-    std::vector<int> shape;
+    std::vector<int> shape; // n c h w
 
     MemoryMode mode;
     DataType type;
@@ -52,7 +52,7 @@ union Param {
    float fval;
 };
 
-using Task = std::function<void(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
+using Task = std::function<void(void *usr, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
 
 // Session
 class ECAS_API Session {
@@ -71,7 +71,7 @@ public:
                     std::vector<std::vector<int>> &&output_dims, 
                     int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
-    void BuildGraph(std::vector<std::vector<std::string>> &&relation);
+    void BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation);
     void ShowInfo(); // 不只是graph的，还包含其他内容
 
     void Start();
@@ -84,8 +84,9 @@ public:
     
     //////////////
     // Operator
+    void *GetOp(std::string op_name);
     // input && output.
-    static void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    void OpRun(void *op_ptr, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
     // inplace.
     static void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &ios);
     // 手动组合部分，待后续明确通用参数
@@ -95,6 +96,10 @@ public:
 private:
     void *params_;
 };
+
+// class ECAS_API Operator {
+
+// };
 
 // Independent acceleration functions
 void HelloWorld();

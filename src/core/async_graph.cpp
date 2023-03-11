@@ -143,7 +143,8 @@ void AsyncGraph::ReorderTensors() {
     }
 }
 
-void AsyncGraph::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
+void AsyncGraph::BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation) {
+    usr_ = usr;
     // Build topology
     topo_.Build(nodes_, std::forward<std::vector<std::vector<std::string>>>(relation));
     // Specify inputs and outputs for each node according to the constructed topology.
@@ -297,7 +298,7 @@ void AsyncGraph::EndProfile() {
 
 void AsyncGraph::Start() {
     // Start all task threads.
-    scheduler_.TasksSpawn();
+    scheduler_.TasksSpawn(usr_);
     // StartProfile();      
 }
 

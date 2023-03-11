@@ -11,7 +11,8 @@ namespace ecas {
 
 class GemmOp: public Operator {
 public:
-    void Run(std::vector<ITensor *> &inputs, std::vector<Param> &params, std::vector<ITensor *> &outputs);
+    bool DimCheck(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    void Run(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
 };
 
 }  // end of namespace ecas.

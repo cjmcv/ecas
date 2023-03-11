@@ -16,16 +16,14 @@ public:
 		  			  const float *B, const int ldb,
 		              float *C, const int ldc);
 
-	void Init();
-
 	// Singleton mode. Only one KernelFactory exist.
-	static CpuKernelDispatcher& GetInstance() {
-		static CpuKernelDispatcher dispatcher;
+	static CpuKernelDispatcher *GetInstance() {
+		static CpuKernelDispatcher *dispatcher = new CpuKernelDispatcher;
 		return dispatcher;
 	}
 
 private:
-	CpuKernelDispatcher() {}
+	CpuKernelDispatcher();
 };
 
 // TODO: 1. 根据型号，确定线程布局。2. 选择spirv文件。

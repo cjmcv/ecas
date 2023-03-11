@@ -23,7 +23,7 @@ public:
                     std::vector<std::vector<int>> &&out_shapes,
                     int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
-    void BuildGraph(std::vector<std::vector<std::string>> &&relation);
+    void BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation);
     void ShowInfo();
 
     void Start();
@@ -54,6 +54,7 @@ private:
     std::vector<Node *> graph_nodes_; // 参与组建图的节点
 
     Topology topo_;
+    void *usr_;
     Scheduler scheduler_;
     TensorPool *tensor_pool_;
 

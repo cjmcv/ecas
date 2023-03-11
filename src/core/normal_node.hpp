@@ -18,7 +18,7 @@ public:
                std::vector<std::vector<int>> &output_dims);
     ~NormalNode();
 
-    virtual void Run(std::vector<ITensor *> &input, std::vector<ITensor *> &output) { task_(input, output); }
+    virtual void Run(void *usr, std::vector<ITensor *> &input, std::vector<ITensor *> &output) { task_(usr, input, output); }
 
 private:
     Task task_;

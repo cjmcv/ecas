@@ -14,22 +14,34 @@ namespace ecas {
 struct SessionParams {
     TensorPool *tensor_pool; // graph是否要独占一个TensorPool？topology能否给tensorpool提供依赖信息？    
     AsyncGraph *graph;
+    OperatorExecutor *exe;  // 
 };
 
 Session::Session(const std::string &name, SessionConfig &config) {
     SessionParams *p = new SessionParams;
     p->tensor_pool = new TensorPool();
     p->graph = new AsyncGraph(name, config.mode, config.num_thread, p->tensor_pool);
-
+    p->exe = new OperatorExecutor();
     params_ = (void *)p;
 }
 
 Session::~Session() {
     SessionParams *p = (SessionParams *)params_;
+    delete p->exe;
     delete p->graph;
     delete p->tensor_pool;
     delete p;
 }
+
+//
+
+ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type) {
+    SessionParams *p = (SessionParams *)params_;
+    Tensor *t = p->tensor_pool->CreateTensor(shape, type);
+    return t->GetITensorPtr();
+}
+
+//
 
 void Session::CreateNode(const std::string &name, Task &&task, 
                          std::vector<std::vector<int>> &&input_dims, 
@@ -47,9 +59,9 @@ void Session::CreateNode(const std::string &name, std::vector<std::vector<std::s
     p->graph->CreateNode(name, std::forward<std::vector<std::vector<std::string>>>(relation));
 }
 
-void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
+void Session::BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation) {
     SessionParams *p = (SessionParams *)params_;
-    p->graph->BuildGraph(std::forward<std::vector<std::vector<std::string>>>(relation));
+    p->graph->BuildGraph(usr, std::forward<std::vector<std::vector<std::string>>>(relation));
 }
 
 void Session::ShowInfo() {
@@ -79,17 +91,17 @@ void Session::GraphGetResult(ITensor *out) {
 
 //
 
-ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type) {
+void *Session::GetOp(std::string op_name) {
     SessionParams *p = (SessionParams *)params_;
-    Tensor *t = p->tensor_pool->CreateTensor(shape, type);
-    return t->GetITensorPtr();
+    return p->exe->GetOp(op_name);
 }
 
 //
 
-void Session::OpRun(std::string op_name, std::vector<Param> &params, 
+void Session::OpRun(void *op_ptr, std::vector<Param> &params, 
                     std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
-    OperatorExecutor::GetInstance().OpRun(op_name, params, inputs, outputs);
+    SessionParams *p = (SessionParams *)params_;
+    p->exe->OpRun(op_ptr, params, inputs, outputs);
 }
 
 } // ecas.
