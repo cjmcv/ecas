@@ -26,7 +26,15 @@ public:
     Operator(): cpu_dispatcher_(CpuKernelDispatcher::GetInstance()) {}
     virtual bool DimCheck(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) = 0;
     virtual void Run(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) = 0;
-    
+
+    // Show relevant prompts.
+    virtual void Help() const = 0;
+
+// private:
+//     // Set the input and output data.
+//     virtual void IoCheckAndSet(const std::vector<ITensor *> &inputs,
+//                                const std::vector<ITensor *> &outputs) = 0;
+
 protected:
     CpuKernelDispatcher *cpu_dispatcher_;
     

@@ -7,25 +7,25 @@
 
 #include <string>
 #include <map>
-#include "node.hpp"
 #include "backend/operator.hpp"
+#include "backend/op_factory.hpp"
 
 namespace ecas {
 
 class OperatorExecutor {
     
 public:
-    OperatorExecutor() {};
-    ~OperatorExecutor() {};
+    OperatorExecutor();
+    ~OperatorExecutor();
 
     // 
-    void *GetOp(std::string op_name) {}
+    Operator *CreateOp(std::string &op_name, std::string &op_params);
     void OpRun(void *op_ptr, std::vector<Param> &params, 
                std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
 
 private:
-    
-    std::map<std::string, Operator*> op_map_;
+    std::vector<Operator*> ops_;
+    // std::map<std::string, Operator*> op_map_;
 };
 
 }  // end of namespace ecas.

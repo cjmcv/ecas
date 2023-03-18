@@ -59,9 +59,9 @@ void Session::CreateNode(const std::string &name, std::vector<std::vector<std::s
     p->graph->CreateNode(name, std::forward<std::vector<std::vector<std::string>>>(relation));
 }
 
-void Session::BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation) {
+void Session::BuildGraph(std::vector<std::vector<std::string>> &&relation) {
     SessionParams *p = (SessionParams *)params_;
-    p->graph->BuildGraph(usr, std::forward<std::vector<std::vector<std::string>>>(relation));
+    p->graph->BuildGraph(std::forward<std::vector<std::vector<std::string>>>(relation));
 }
 
 void Session::ShowInfo() {
@@ -69,9 +69,9 @@ void Session::ShowInfo() {
     p->graph->ShowInfo();
 }
 
-void Session::Start() {
+void Session::Start(void *usr) {
     SessionParams *p = (SessionParams *)params_;
-    p->graph->Start();   
+    p->graph->Start(usr);   
 }
 
 void Session::Stop() {        
@@ -91,9 +91,9 @@ void Session::GraphGetResult(ITensor *out) {
 
 //
 
-void *Session::GetOp(std::string op_name) {
+void *Session::CreateOp(std::string op_name, std::string op_params) {
     SessionParams *p = (SessionParams *)params_;
-    return p->exe->GetOp(op_name);
+    return p->exe->CreateOp(op_name, op_params);
 }
 
 //

@@ -23,10 +23,10 @@ public:
                     std::vector<std::vector<int>> &&out_shapes,
                     int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
-    void BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation);
+    void BuildGraph(std::vector<std::vector<std::string>> &&relation);
     void ShowInfo();
 
-    void Start();
+    void Start(void *usr);
     void Stop();
 
     // Asynchronous function.

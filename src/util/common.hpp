@@ -8,6 +8,18 @@
 namespace ecas {
 namespace util {
 
+////////////////
+// Class.
+////////////////
+class StrProcessor {
+public:
+    static std::string FetchSubStr(std::string &src_str, std::string start_str, std::string end_str) {
+        int start_idx = src_str.find(start_str) + start_str.length();
+        int end_idx = src_str.find(end_str, start_idx);
+        return src_str.substr(start_idx, end_idx - start_idx);
+    }
+};
+
 // Get type from type flag.
 #define TYPE_SWITCH(type, DType, ...)               \
   switch (type) {                                   \

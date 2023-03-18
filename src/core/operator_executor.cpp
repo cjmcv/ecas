@@ -4,9 +4,21 @@
 
 #include "operator_executor.hpp"
 
-#include "backend/gemm_op.hpp"
-
 namespace ecas {
+
+OperatorExecutor::OperatorExecutor() {}
+
+OperatorExecutor::~OperatorExecutor() {
+    for (int i=0; i<ops_.size(); i++) {
+        delete ops_[i];
+    }
+}
+
+Operator *OperatorExecutor::CreateOp(std::string &op_name, std::string &op_params) {
+    Operator *op = OpFactory::GetInstance().CreateOpByName(op_name, op_params);
+    ops_.push_back(op);
+    return op;
+}
 
 void OperatorExecutor::OpRun(void *op_ptr, std::vector<Param> &params, 
                              std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {

@@ -71,10 +71,10 @@ public:
                     std::vector<std::vector<int>> &&output_dims, 
                     int group_id = 0);
     void CreateNode(const std::string &name, std::vector<std::vector<std::string>> &&relation);
-    void BuildGraph(void *usr, std::vector<std::vector<std::string>> &&relation);
+    void BuildGraph(std::vector<std::vector<std::string>> &&relation);
     void ShowInfo(); // 不只是graph的，还包含其他内容
 
-    void Start();
+    void Start(void *usr);
     void Stop();
 
     // Asynchronous function.
@@ -84,7 +84,7 @@ public:
     
     //////////////
     // Operator
-    void *GetOp(std::string op_name);
+    void *CreateOp(std::string op_name, std::string op_params);
     // input && output.
     void OpRun(void *op_ptr, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
     // inplace.
