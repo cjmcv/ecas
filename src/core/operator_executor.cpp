@@ -22,7 +22,10 @@ Operator *OperatorExecutor::CreateOp(std::string &op_name, std::string &op_param
 
 void OperatorExecutor::OpRun(void *op_ptr, std::vector<Param> &params, 
                              std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
-    std::map<std::string, Operator*>::iterator iter;
+    Operator *op = (Operator *)op_ptr;
+    op->Run(params, inputs, outputs);
+    
+    // std::map<std::string, Operator*>::iterator iter;
     // iter = op_map_.find(op_name);
     // if (iter != op_map_.end()) {
     //     iter->second->Run(params, inputs, outputs);

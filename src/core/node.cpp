@@ -80,26 +80,24 @@ bool Node::BorrowIo(std::vector<ITensor *> &inputs, std::vector<ITensor *> &outp
         if (!is_ready) return false;
         output_tensors_.push_back(inside_free);
     }
-    // Get ITensor
+    // Get ITensor, TODO 直接拷贝
     inputs.clear();
     for (int i=0; i<input_tensors_.size(); i++) {
-        ITensor *it = input_tensors_[i]->GetITensorPtr();
-        inputs.push_back(it);
+        inputs.push_back(input_tensors_[i]);
     }
     outputs.clear();
     for (int i=0; i<output_tensors_.size(); i++) {
-        ITensor *it = output_tensors_[i]->GetITensorPtr();
-        outputs.push_back(it);
+        outputs.push_back(output_tensors_[i]);
     }
     // Check id
     for (int i=1; i<inputs.size(); i++) {
-        if (inputs[i]->id != inputs[0]->id) {
+        if (inputs[i]->id() != inputs[0]->id()) {
             ECAS_LOGE("Node::BorrowIo -> The ID of Tensor in the same group is inconsistent.\n");
         }
     }
     // Pass id
     for (int i=0; i<outputs.size(); i++) {
-        outputs[i]->id = inputs[0]->id;
+        outputs[i]->SetId(inputs[0]->id());
     }
     return true;
 }

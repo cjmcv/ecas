@@ -37,19 +37,31 @@ struct SessionConfig {
     int num_thread;
 };
 
-struct ITensor {    
-    int id;
-    std::vector<int> shape; // n c h w
-
-    MemoryMode mode;
-    DataType type;
-    void *data;
-};
-
 union Param {
    char cval;
    int ival;
    float fval;
+};
+
+class ECAS_API ITensor {
+public:
+    inline int id() const { return id_; }
+    inline std::vector<int> &shape() { return shape_; }
+    inline MemoryMode mode() const { return mode_; }
+    inline void *data() const { return data_; }
+    
+    inline void SetId(int id) { id_ = id; }
+    virtual void Print() const = 0;
+
+protected:
+    ITensor() {}
+
+    int id_;
+    std::vector<int> shape_; // n c h w
+
+    MemoryMode mode_;
+    DataType type_;
+    void *data_;
 };
 
 using Task = std::function<void(void *usr, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
@@ -88,10 +100,10 @@ public:
     // input && output.
     void OpRun(void *op_ptr, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
     // inplace.
-    static void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &ios);
+    // void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &ios);
     // 手动组合部分，待后续明确通用参数
-    static void *OpRunA();
-    static void OpRunB();
+    // static void *OpRunA();
+    // static void OpRunB();
     
 private:
     void *params_;

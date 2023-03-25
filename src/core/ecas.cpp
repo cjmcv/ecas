@@ -9,25 +9,37 @@
 #include "tensor_pool.hpp"
 #include "operator_executor.hpp"
 
+#include "util/logger.hpp"
+#include "util/common.hpp"
+
 namespace ecas {
+
+/////////////////////////////////////////////
+// ITensor
+/////////////////////////////////////////////
+
+
+/////////////////////////////////////////////
+// Session
+/////////////////////////////////////////////
 
 struct SessionParams {
     TensorPool *tensor_pool; // graph是否要独占一个TensorPool？topology能否给tensorpool提供依赖信息？    
     AsyncGraph *graph;
-    OperatorExecutor *exe;  // 
+    OperatorExecutor *executor;  // 
 };
 
 Session::Session(const std::string &name, SessionConfig &config) {
     SessionParams *p = new SessionParams;
     p->tensor_pool = new TensorPool();
     p->graph = new AsyncGraph(name, config.mode, config.num_thread, p->tensor_pool);
-    p->exe = new OperatorExecutor();
+    p->executor = new OperatorExecutor();
     params_ = (void *)p;
 }
 
 Session::~Session() {
     SessionParams *p = (SessionParams *)params_;
-    delete p->exe;
+    delete p->executor;
     delete p->graph;
     delete p->tensor_pool;
     delete p;
@@ -38,7 +50,7 @@ Session::~Session() {
 ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type) {
     SessionParams *p = (SessionParams *)params_;
     Tensor *t = p->tensor_pool->CreateTensor(shape, type);
-    return t->GetITensorPtr();
+    return t;
 }
 
 //
@@ -93,7 +105,7 @@ void Session::GraphGetResult(ITensor *out) {
 
 void *Session::CreateOp(std::string op_name, std::string op_params) {
     SessionParams *p = (SessionParams *)params_;
-    return p->exe->CreateOp(op_name, op_params);
+    return p->executor->CreateOp(op_name, op_params);
 }
 
 //
@@ -101,7 +113,7 @@ void *Session::CreateOp(std::string op_name, std::string op_params) {
 void Session::OpRun(void *op_ptr, std::vector<Param> &params, 
                     std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
     SessionParams *p = (SessionParams *)params_;
-    p->exe->OpRun(op_ptr, params, inputs, outputs);
+    p->executor->OpRun(op_ptr, params, inputs, outputs);
 }
 
 } // ecas.

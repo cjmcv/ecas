@@ -14,29 +14,28 @@
 
 namespace ecas {
 
-// ITensor 对外数据交互
-// Tensor 各种内存操作
+// ITensor 为Tensor的父类，对外数据交互, 隐藏细节，不允许外部构造
+// Tensor 为ITensor子类，实际内存操作者，跨设备，异步拷贝等
 // Buffer 实际内存管理提供者，多设备多类型内存
 
 // 基本数据计算与操作
-class Tensor {
+class Tensor : public ITensor {
 
 public:
     Tensor(std::vector<int> &shape, DataType type);
     // Tensor(ITensor &in);
     ~Tensor();
 
-    inline ITensor *GetITensorPtr() { return it_; }
-
     void CopyFrom(ITensor *in);
     void CopyTo(ITensor *out);
+    
+    void Print() const;
 
 private:
     void CheckDimension(ITensor *target);
 
 private:
     int size_;
-    ITensor *it_;
     Buffer *buffer_;
 };
 
