@@ -45,7 +45,7 @@ class TensorPool {
 public:
     ~TensorPool();
     BlockingQueuePair *CreateBlockingQueue(std::vector<int> &shape, DataType type);
-    Tensor *CreateTensor(std::vector<int> &shape, DataType type);
+    Tensor *CreateTensor(std::vector<int> &shape, DataType type, void *data);
 
     void PrintInfo();
     void ExitAllBlockingQueue();

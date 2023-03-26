@@ -6,6 +6,7 @@ namespace ecas {
 
 CpuKernelDispatcher::CpuKernelDispatcher() {
 	GemmKernel = Gemm;
+	DotKernel = Dot;
 }
 
 } // ecas.

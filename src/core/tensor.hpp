@@ -22,21 +22,25 @@ namespace ecas {
 class Tensor : public ITensor {
 
 public:
-    Tensor(std::vector<int> &shape, DataType type);
+    Tensor(std::vector<int> &shape, DataType type, void *data = nullptr);
     // Tensor(ITensor &in);
     ~Tensor();
 
     void CopyFrom(ITensor *in);
     void CopyTo(ITensor *out);
     
-    void Print() const;
+    // Use external memory.
+    void BindHostDataPtr(void *data);
+    void *GetData(MemoryMode mode = ON_HOST);
+    void Print();
 
 private:
     void CheckDimension(ITensor *target);
 
 private:
     int size_;
-    Buffer *buffer_;
+    Buffer *host_buffer_;
+    Buffer *device_buffer_;
 };
 
 }  // end of namespace ecas.

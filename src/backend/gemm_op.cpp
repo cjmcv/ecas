@@ -31,9 +31,9 @@ bool GemmOp::DimCheck(std::vector<Param> &params, std::vector<ITensor *> &inputs
 }
 
 void GemmOp::Run(std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs) {
-    float *A = (float *)inputs[0]->data();
-    float *B = (float *)inputs[1]->data();
-    float *C = (float *)outputs[0]->data();
+    float *A = (float *)inputs[0]->GetData();
+    float *B = (float *)inputs[1]->GetData();
+    float *C = (float *)outputs[0]->GetData();
     int M = outputs[0]->shape()[0]; // h
     int N = outputs[0]->shape()[1]; // W
     int K = inputs[0]->shape()[1];

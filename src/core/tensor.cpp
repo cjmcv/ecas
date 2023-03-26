@@ -11,7 +11,7 @@
 
 namespace ecas {
 
-Tensor::Tensor(std::vector<int> &shape, DataType type) {
+Tensor::Tensor(std::vector<int> &shape, DataType type, void *data) {
     id_ = -1;
     shape_ = shape;
     type_ = type;
@@ -23,26 +23,20 @@ Tensor::Tensor(std::vector<int> &shape, DataType type) {
     if (size_ == 0)
         std::abort();
     
-    buffer_ = new Buffer(size_);
-    data_ = (char *)buffer_->data();
-
+    device_buffer_ = nullptr;    
+    host_buffer_ = new Buffer(size_, data);
     mode_ = ON_HOST;
 }
 
-// Tensor::Tensor(ITensor &in) {
-//     size_ = 1;
-//     for (int i=0; i < in.shape.size(); i++) {
-//         size_ *= in.shape[i];
-//     }
-//     if (size_ == 0)
-//         std::abort();
-
-//     shape_ = in.shape;
-//     buffer_ = new Buffer(in.data, size_);
-// }
-
 Tensor::~Tensor() {
-    delete buffer_;
+    if (host_buffer_ != nullptr) {
+        delete host_buffer_;
+        host_buffer_ = nullptr;      
+    }
+    if (device_buffer_ != nullptr) {
+        delete device_buffer_;
+        device_buffer_ = nullptr;      
+    }
 }
 
 void Tensor::CheckDimension(ITensor *target) {
@@ -64,7 +58,7 @@ void Tensor::CopyFrom(ITensor *in) {
         ECAS_LOGE("Tensor::CloneFrom -> memory type mismatch.\n");
     }
     id_ = in->id();
-    memcpy(data_, in->data(), size_);
+    memcpy(GetData(), in->GetData(), size_);
 }
 
 void Tensor::CopyTo(ITensor *out) {
@@ -75,10 +69,34 @@ void Tensor::CopyTo(ITensor *out) {
         ECAS_LOGE("Tensor::CopyTo -> memory type mismatch.\n");
     }
     out->SetId(id_);
-    memcpy(out->data(), data_, size_);
+    memcpy(out->GetData(), GetData(), size_);
 }
 
-void Tensor::Print() const {
+void Tensor::BindHostDataPtr(void *data) {
+    host_buffer_->SetDataPtr(data);
+}
+
+void *Tensor::GetData(MemoryMode mode) {
+    if (mode == ON_HOST) {
+        if (mode_ == ON_HOST)
+            return host_buffer_->data();
+        else {
+            // TODO: push data from host to device.
+            return device_buffer_->data();
+        }
+    }
+    else {
+        if (mode_ == ON_HOST) {
+            // TODO: push data from device to host
+            return host_buffer_->data();
+        }
+        else {
+            return device_buffer_->data();
+        }
+    }
+}
+
+void Tensor::Print() {
     ECAS_LOGS("\n====== Tensor %p ======\n", this);
     ECAS_LOGS("\nShape: ");
     for (int i = 0; i < shape_.size(); i++) {
@@ -89,8 +107,9 @@ void Tensor::Print() const {
     int s[4] = {1, 1, 1, 1};
     memcpy(s + 4 - shape_.size(), &shape_[0], sizeof(uint32_t) * shape_.size());
 
+    void *host_data = GetData(ON_HOST);
     TYPE_SWITCH(type_, T, {
-        T *data = (T *)data_;
+        T *data = (T *)host_data;
         for (int n = 0; n < s[0]; n++) {
             int n_bias = n * s[1] * s[2] * s[3];
             for (int c = 0; c < s[1]; c++) {

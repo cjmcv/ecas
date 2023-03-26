@@ -125,7 +125,7 @@ void Scheduler::TasksSpawn(void *usr) {
                     // printf("%s -> (%d, %d).\n", n->name().c_str(), inputs.size(), outputs.size());
                     n->Run(usr, inputs, outputs);
                     n->RecycleIo();
-                } 
+                }
             }
             ECAS_LOGI("is_stop_: %d.\n", is_stop_);
         });

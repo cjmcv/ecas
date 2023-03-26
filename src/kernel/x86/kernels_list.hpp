@@ -11,6 +11,8 @@
 
 namespace ecas {
 
+void Dot(int len, const float *vec_a, const float *vec_b, float *res);
+
 void Gemm(const int M, const int N, const int K, 
 		  const float ALPHA,
 		  const float *A, const int lda,

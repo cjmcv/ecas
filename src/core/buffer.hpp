@@ -15,13 +15,17 @@ namespace ecas {
 class Buffer {
 
 public:
-    Buffer(void *data, int size);
-    Buffer(unsigned int size);
+    Buffer(uint32_t size, void *data = nullptr);
     ~Buffer();
+
     inline void *data() { return data_; }
+    void SetDataPtr(void *data);
 
 private:
-    int size_;
+    void Release();
+
+private:
+    uint32_t size_;
     void *data_;
     bool is_owned_;
 };

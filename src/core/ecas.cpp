@@ -47,9 +47,9 @@ Session::~Session() {
 
 //
 
-ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type) {
+ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type, void *data) {
     SessionParams *p = (SessionParams *)params_;
-    Tensor *t = p->tensor_pool->CreateTensor(shape, type);
+    Tensor *t = p->tensor_pool->CreateTensor(shape, type, data);
     return t;
 }
 

@@ -9,19 +9,27 @@ public:
 
         std::string op_params = "alpha: 1.0, beta: 2.0";
         gemm_ptr_ = session_->CreateOp("gemm", op_params);
+        dot_ptr_ = session_->CreateOp("dot", op_params);
 
-        // for task B
+        // for task B and C
         gemm_b_ = session_->CreateITensor({600, 300}, ecas::FP32);
-        float *data = (float *)gemm_b_->data();
+        float *data = (float *)gemm_b_->GetData();
         for (int j=0; j<600*300; j++) {
             data[j] = 1;
         }
+        // for task D
+        dot_a_ = session_->CreateITensor({300}, ecas::FP32);
+        dot_b_ = session_->CreateITensor({300}, ecas::FP32);
     }
     ecas::Session *session() { return session_; };
 
 public:
     ecas::ITensor *gemm_b_;
     void *gemm_ptr_;
+
+    ecas::ITensor *dot_a_;
+    ecas::ITensor *dot_b_;
+    void *dot_ptr_;
 
 private:
     ecas::Session *session_;
@@ -34,7 +42,7 @@ void TaskA(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::IT
     AlgoTasks *ins = (AlgoTasks *)usr;
     static int count = 0;
     // TODO: 检查维度（用static 检查一次即可），宏定义，归到工具中
-    float *data = (float *)inputs[0]->data();
+    float *data = (float *)inputs[0]->GetData();
     int rows = inputs[0]->shape()[0];
     int cols = inputs[0]->shape()[1];
 
@@ -46,8 +54,8 @@ void TaskA(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::IT
         }
     }
 
-    float *out_data0 = (float *)outputs[0]->data();
-    float *out_data1 = (float *)outputs[1]->data();
+    float *out_data0 = (float *)outputs[0]->GetData();
+    float *out_data1 = (float *)outputs[1]->GetData();
     for (int i=0; i<rows/2; i++) {
         for (int j=0; j<cols; j++) {
             out_data0[i*cols + j] = data[i*cols + j];
@@ -96,8 +104,21 @@ void TaskC(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::IT
 // 200 * 300， 400 * 300 合并 点积分
 void TaskD(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::ITensor *> &outputs) {
     AlgoTasks *ins = (AlgoTasks *)usr;
-
     static int count = 0;
+
+    float *data0 = (float *)inputs[0]->GetData();
+    float *data1 = (float *)inputs[1]->GetData();
+    ins->dot_a_->BindHostDataPtr(data0);
+    ins->dot_b_->BindHostDataPtr(data1);
+
+    std::vector<ecas::ITensor *> new_inputs;
+    new_inputs.push_back(ins->dot_a_);
+    new_inputs.push_back(ins->dot_b_);
+    std::vector<ecas::Param> params;
+    ins->session()->OpRun(ins->dot_ptr_, params, new_inputs, outputs);
+
+    // printf("inner id: %d.\n", );
+    outputs[0]->Print();
     printf("TaskD: %d (%d).\n", count++, std::this_thread::get_id());
 }
 
@@ -123,7 +144,7 @@ void GraphBaseDemo() {
     AlgoTasks algo(session);
     // TODO: 构建串行测试代码
     session->Start((void *)&algo);
-    float *in_data = (float *)in->data();
+    float *in_data = (float *)in->GetData();
     for (int i=0; i<5; i++) {
         for (int j=0; j<600*600; j++) {
             in_data[j] = 1;
@@ -133,7 +154,7 @@ void GraphBaseDemo() {
     }
     for (int i=0; i<5; i++) {
         session->GraphGetResult(out);
-        printf("out id: %d.\n", out->id());
+        printf("out id: %d, %f.\n", out->id(), ((float *)out->GetData())[0]);
     }
     std::this_thread::sleep_for(std::chrono::seconds(2));
     printf("Call stop.\n");

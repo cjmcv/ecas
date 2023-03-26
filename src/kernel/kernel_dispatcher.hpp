@@ -10,8 +10,16 @@ namespace ecas {
 // TODO: 针对gpu kernel，可能需要额外的参数，这些通过补充成员来实现。
 class CpuKernelDispatcher {
 public:
+	//////////////
+	// Level 1
+	void (*DotKernel)(int len, const float *vec_a, const float *vec_b, float *res);
+	//////////////
+	// Level 2
+
+	//////////////
+	// Level 3
     // MatMul
-    void(*GemmKernel)(const int M, const int N, const int K, const float ALPHA,
+    void (*GemmKernel)(const int M, const int N, const int K, const float ALPHA,
 		              const float *A, const int lda,
 		  			  const float *B, const int ldb,
 		              float *C, const int ldc);

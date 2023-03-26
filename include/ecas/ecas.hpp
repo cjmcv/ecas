@@ -47,11 +47,12 @@ class ECAS_API ITensor {
 public:
     inline int id() const { return id_; }
     inline std::vector<int> &shape() { return shape_; }
-    inline MemoryMode mode() const { return mode_; }
-    inline void *data() const { return data_; }
-    
+    inline MemoryMode mode() const { return mode_; }    
     inline void SetId(int id) { id_ = id; }
-    virtual void Print() const = 0;
+
+    virtual void BindHostDataPtr(void *data) = 0;
+    virtual void *GetData(MemoryMode mode = ON_HOST) = 0;
+    virtual void Print() = 0;
 
 protected:
     ITensor() {}
@@ -61,7 +62,6 @@ protected:
 
     MemoryMode mode_;
     DataType type_;
-    void *data_;
 };
 
 using Task = std::function<void(void *usr, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
@@ -74,7 +74,7 @@ public:
 
     //////////////
     // Memory
-    ITensor *CreateITensor(std::vector<int> &&shape, DataType type);
+    ITensor *CreateITensor(std::vector<int> &&shape, DataType type, void *data = nullptr);
     
     //////////////
     // AsyncGraph
@@ -96,7 +96,7 @@ public:
     
     //////////////
     // Operator
-    void *CreateOp(std::string op_name, std::string op_params);
+    void *CreateOp(std::string op_name, std::string op_params = "");
     // input && output.
     void OpRun(void *op_ptr, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
     // inplace.

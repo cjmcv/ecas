@@ -38,8 +38,8 @@ BlockingQueuePair *TensorPool::CreateBlockingQueue(std::vector<int> &shape, Data
     return bqp;
 }
 
-Tensor *TensorPool::CreateTensor(std::vector<int> &shape, DataType type) {
-    Tensor *t = new Tensor(shape, type);
+Tensor *TensorPool::CreateTensor(std::vector<int> &shape, DataType type, void *data) {
+    Tensor *t = new Tensor(shape, type, data);
     tensors_.push_back(t);
     return t;
 }
