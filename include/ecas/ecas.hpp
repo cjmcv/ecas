@@ -72,10 +72,17 @@ public:
     Session(const std::string &name, SessionConfig &config);
     ~Session();
 
-    //////////////
+    ///////////
     // Memory
     ITensor *CreateITensor(std::vector<int> &&shape, DataType type, void *data = nullptr);
     
+    /////////////////////
+    // Operator executor   TODO: inplace.
+    void *CreateOp(std::string op_name, std::string op_params = "");
+    // input && output.
+    void OpRun(void *op_ptr, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
+    // void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &ios);
+   
     //////////////
     // AsyncGraph
     void CreateNode(const std::string &name, Task &&task, 
@@ -93,18 +100,7 @@ public:
     void GraphFeed(ITensor *in);
     // Get the result after calling the Feed.
     void GraphGetResult(ITensor *out);
-    
-    //////////////
-    // Operator
-    void *CreateOp(std::string op_name, std::string op_params = "");
-    // input && output.
-    void OpRun(void *op_ptr, std::vector<Param> &params, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs);
-    // inplace.
-    // void OpRun(std::string op_name, std::vector<Param> &params, std::vector<ITensor *> &ios);
-    // 手动组合部分，待后续明确通用参数
-    // static void *OpRunA();
-    // static void OpRunB();
-    
+     
 private:
     void *params_;
 };

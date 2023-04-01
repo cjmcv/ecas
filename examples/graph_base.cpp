@@ -1,5 +1,6 @@
 #include "ecas/ecas.hpp"
 
+#include <chrono>
 #include <thread>
 
 class AlgoTasks {
@@ -122,6 +123,66 @@ void TaskD(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::IT
     printf("TaskD: %d (%d).\n", count++, std::this_thread::get_id());
 }
 
+class SerialPass {
+public:
+    void Initialize(AlgoTasks *ins) {
+        ins_ = ins;
+        a_in_ = ins->session()->CreateITensor({600, 600}, ecas::FP32);
+        a_out_b_in_ = ins->session()->CreateITensor({200, 600}, ecas::FP32);
+        a_out_c_in_ = ins->session()->CreateITensor({400, 600}, ecas::FP32);
+
+        b_out_d_in_ = ins->session()->CreateITensor({200, 300}, ecas::FP32);
+        c_out_d_in_ = ins->session()->CreateITensor({400, 300}, ecas::FP32);
+
+        d_out_ = ins->session()->CreateITensor({1}, ecas::FP32);
+        //
+        // a_vin_.push_back(a_in_);
+        a_vout_.push_back(a_out_b_in_);
+        a_vout_.push_back(a_out_c_in_);
+
+        b_vin_.push_back(a_out_b_in_);
+        b_vout_.push_back(b_out_d_in_);
+
+        c_vin_.push_back(a_out_c_in_);
+        c_vout_.push_back(c_out_d_in_);
+
+        d_vin_.push_back(b_out_d_in_);
+        d_vin_.push_back(c_out_d_in_);
+        // d_vout_.push_back(d_out_);
+    }
+
+    void Run(std::vector<ecas::ITensor *> &inputs, std::vector<ecas::ITensor *> &outputs) {
+        TaskA(ins_, inputs, a_vout_);
+        TaskB(ins_, b_vin_, b_vout_);
+        TaskC(ins_, c_vin_, c_vout_);
+        TaskD(ins_, d_vin_, outputs);
+    }
+    
+private:
+    AlgoTasks *ins_;
+
+    ecas::ITensor *a_in_;
+    ecas::ITensor *a_out_b_in_;
+    ecas::ITensor *a_out_c_in_;
+
+    ecas::ITensor *b_out_d_in_;
+    ecas::ITensor *c_out_d_in_;
+
+    ecas::ITensor *d_out_;
+
+    std::vector<ecas::ITensor *> a_vin_;
+    std::vector<ecas::ITensor *> a_vout_;
+
+    std::vector<ecas::ITensor *> b_vin_;
+    std::vector<ecas::ITensor *> b_vout_;
+
+    std::vector<ecas::ITensor *> c_vin_;
+    std::vector<ecas::ITensor *> c_vout_;
+
+    std::vector<ecas::ITensor *> d_vin_;
+    std::vector<ecas::ITensor *> d_vout_;
+};
+
 void GraphBaseDemo() {
 
     ecas::SessionConfig config;
@@ -142,7 +203,6 @@ void GraphBaseDemo() {
     ecas::ITensor *out = session->CreateITensor({1}, ecas::FP32);
 
     AlgoTasks algo(session);
-    // TODO: 构建串行测试代码
     session->Start((void *)&algo);
     float *in_data = (float *)in->GetData();
     for (int i=0; i<5; i++) {
@@ -156,7 +216,23 @@ void GraphBaseDemo() {
         session->GraphGetResult(out);
         printf("out id: %d, %f.\n", out->id(), ((float *)out->GetData())[0]);
     }
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    // std::this_thread::sleep_for(std::chrono::seconds(2));
     printf("Call stop.\n");
     session->Stop();
+
+    // SerialPass demo.
+    SerialPass sp;
+    sp.Initialize(&algo);
+    std::vector<ecas::ITensor *> a_vin;
+    a_vin.push_back(in);
+    std::vector<ecas::ITensor *> d_vout;
+    d_vout.push_back(out);
+    for (int i=0; i<5; i++) {
+        for (int j=0; j<600*600; j++) {
+            in_data[j] = 1;
+        }
+        in->SetId(i+5);
+        sp.Run(a_vin, d_vout);
+        printf("out id: %d, %f.\n", out->id(), ((float *)out->GetData())[0]);
+    }
 }
