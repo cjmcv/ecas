@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <thread>
+#include <cmath>
 
 class AlgoTasks {
 public:
@@ -202,6 +203,11 @@ void GraphBaseDemo() {
     ecas::ITensor *in = session->CreateITensor({600, 600}, ecas::FP32);
     ecas::ITensor *out = session->CreateITensor({1}, ecas::FP32);
 
+    //
+    ecas::UtilBox util_box;
+    void *timer = util_box.GetNewTimer("graph_base", 2);
+
+    util_box.TimerStart(timer);
     AlgoTasks algo(session);
     session->Start((void *)&algo);
     float *in_data = (float *)in->GetData();
@@ -216,6 +222,8 @@ void GraphBaseDemo() {
         session->GraphGetResult(out);
         printf("out id: %d, %f.\n", out->id(), ((float *)out->GetData())[0]);
     }
+    util_box.TimerStop(timer, 0);
+
     // std::this_thread::sleep_for(std::chrono::seconds(2));
     printf("Call stop.\n");
     session->Stop();
@@ -227,6 +235,8 @@ void GraphBaseDemo() {
     a_vin.push_back(in);
     std::vector<ecas::ITensor *> d_vout;
     d_vout.push_back(out);
+
+    util_box.TimerStart(timer);
     for (int i=0; i<5; i++) {
         for (int j=0; j<600*600; j++) {
             in_data[j] = 1;
@@ -235,4 +245,11 @@ void GraphBaseDemo() {
         sp.Run(a_vin, d_vout);
         printf("out id: %d, %f.\n", out->id(), ((float *)out->GetData())[0]);
     }
+    util_box.TimerStop(timer, 1, 1);
+
+    //
+
+    float y = ecas::Math::expf(1.234f);
+    float y2 = expf(1.234f);
+    printf("expf(1.234f): %f, %f.\n", y, y2);
 }

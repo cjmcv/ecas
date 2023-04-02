@@ -11,6 +11,9 @@
 
 #include "util/logger.hpp"
 #include "util/common.hpp"
+#include "util/timer.hpp"
+
+#include "kernel/generic/funcs_list.hpp"
 
 namespace ecas {
 
@@ -113,6 +116,52 @@ void Session::GraphFeed(ITensor *in) {
 void Session::GraphGetResult(ITensor *out) {
     SessionParams *p = (SessionParams *)params_;
     p->graph->GetResult(out); 
+}
+
+//////////////
+// UtilBox
+struct UtilBoxParams {
+    bool is_timer_close;
+    std::vector<util::Timer *> timers;
+};
+UtilBox::UtilBox() {
+    params_ = new UtilBoxParams;
+}
+UtilBox::~UtilBox() {
+    UtilBoxParams *p = (UtilBoxParams *)params_;
+    // Timer.
+    for (uint32_t i=0; i<p->timers.size(); i++) {
+        delete p->timers[i];
+    }
+    delete p;
+}
+
+// UtilBox::Timer.
+void *UtilBox::GetNewTimer(std::string name, uint32_t num) {
+    UtilBoxParams *p = (UtilBoxParams *)params_;
+    util::Timer *t = new util::Timer(name, num);
+    p->timers.push_back(t);
+    return t;
+}
+
+void UtilBox::TimerStart(void *timer_handle) {
+    util::Timer *t = (util::Timer *)timer_handle;
+    t->Start();
+}
+
+void UtilBox::TimerStop(void *timer_handle, uint32_t idx, uint32_t print_interval) {
+    util::Timer *t = (util::Timer *)timer_handle;
+    t->Stop(idx, print_interval);
+}
+
+//////////////
+// Math
+float Math::expf(float x) {
+    return ecas_expf(x);
+}
+
+float Math::sqrtf(float x) {
+    return ecas_sqrtf(x);
 }
 
 } // ecas.

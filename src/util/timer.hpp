@@ -39,29 +39,22 @@ protected:
 
 class Timer {
 public:
-    Timer(std::string name = "executor");
-
-    inline std::string name() const { return name_; }
-    inline float min() const { return min_; }
-    inline float max() const { return max_; }
-    inline float ave() const { return ave_; }
-    inline int count() const { return count_; }
+    Timer(std::string name, uint32_t num);
+    ~Timer();
 
     void Start();
-    void Stop();
-
-public:
-    static bool is_record_;
+    void Stop(uint32_t idx, uint32_t print_interval = 0);
 
 private:
     CpuTimer timer_;
-    int idx_;
-    std::string name_;
 
-    float min_;
-    float max_;
-    float ave_;
-    int count_;
+    std::string name_;
+    uint32_t num_;
+    uint32_t *count_;
+
+    float *min_;
+    float *max_;
+    float *acc_;
 };
 
 /////////////////////////////////////////////////

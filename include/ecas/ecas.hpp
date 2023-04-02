@@ -64,9 +64,8 @@ protected:
     DataType type_;
 };
 
-using Task = std::function<void(void *usr, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
-
 // Session
+using Task = std::function<void(void *usr, std::vector<ITensor *> &inputs, std::vector<ITensor *> &outputs)>;
 class ECAS_API Session {
 public:
     Session(const std::string &name, SessionConfig &config);
@@ -100,16 +99,40 @@ public:
     void GraphFeed(ITensor *in);
     // Get the result after calling the Feed.
     void GraphGetResult(ITensor *out);
-     
+    
 private:
     void *params_;
 };
 
-// class ECAS_API Operator {
+// UtilBox
+class ECAS_API UtilBox {
+public:
+    UtilBox();
+    ~UtilBox();
+    // Timer.
+    void *GetNewTimer(std::string name, uint32_t num);
+    void TimerStart(void *timer_handle);
+    void TimerStop(void *timer_handle, uint32_t idx, uint32_t print_interval = 0);
+    // Ringbuffer.
 
-// };
+    // AudioReader.
+    // AudioSaver.
+    // ImageReader.
+    // LoggerWriter.
+
+private:
+    void *params_;
+};
 
 // Independent acceleration functions
+// Math
+class ECAS_API Math {
+public:
+    static float expf(float x);
+    static float sqrtf(float x);
+};
+
+// Others
 void HelloWorld();
 void VulkanHelloWorld();
 
