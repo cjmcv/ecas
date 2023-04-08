@@ -8,8 +8,8 @@ SET(INCLUDE_DIR
 message(STATUS "include: ${INCLUDE_DIR}")
 include_directories(${INCLUDE_DIR})
 
-# Source
-file(GLOB_RECURSE SRC_LIST 
+# Source GLOB_RECURSE
+file(GLOB SRC_LIST 
     "${CMAKE_CURRENT_LIST_DIR}/core/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/util/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/backend/*.cpp"
@@ -30,7 +30,11 @@ list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_X86>)
 
 if (ECAS_GPU_USE_VULKAN)
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kernel/vulkan)
-    list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_VULKAN>)
+    list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_KERNEL_VULKAN>)
+
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/backend/engine/vulkan)
+    list(APPEND ECAS_OBJECTS_TO_LINK $<TARGET_OBJECTS:ECAS_ENGINE_VULKAN>)
+
     if (VULKAN_WIN_SDK) # for windows x86 sdk
         list(APPEND ECAS_LIBS_TO_LINK ${VULKAN_WIN_SDK}/Lib/vulkan-1.lib)
         message(STATUS "VULKAN_WIN_SDK: ${VULKAN_WIN_SDK}")

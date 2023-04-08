@@ -252,4 +252,7 @@ void GraphBaseDemo() {
     float y = ecas::Math::expf(1.234f);
     float y2 = expf(1.234f);
     printf("expf(1.234f): %f, %f.\n", y, y2);
+
+    //
+    ecas::VulkanMain();
 }

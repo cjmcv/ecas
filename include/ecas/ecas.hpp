@@ -135,6 +135,7 @@ public:
 // Others
 void HelloWorld();
 void VulkanHelloWorld();
+int VulkanMain();
 
 } // ecas.
 

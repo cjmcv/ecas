@@ -15,4 +15,4 @@ file(GLOB_RECURSE SRC_LIST
 )
 message(STATUS "src: ${SRC_LIST}")
 
-add_library(ECAS_KERNEL_VULKAN OBJECT ${SRC_LIST})
+add_library(ECAS_ENGINE_VULKAN OBJECT ${SRC_LIST})
