@@ -29,7 +29,7 @@ void DotOp::Run(std::vector<Param> &params, std::vector<ITensor *> &inputs, std:
     float *vec_a = (float *)inputs[0]->GetData();
     float *vec_b = (float *)inputs[1]->GetData();
     float *res = (float *)outputs[0]->GetData();
-    int len = outputs[0]->shape()[0]; // len
+    int len = inputs[0]->shape()[0]; // len
 
     cpu_dispatcher_->DotKernel(len, vec_a, vec_b, res);
 }
