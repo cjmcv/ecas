@@ -92,7 +92,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallbackFn(
     return VK_FALSE;
 }
 
-Instance::Instance(const char *app_name, bool enable_validation) {
+Instance::Instance(bool enable_validation) {
     enable_validation_ = enable_validation;
 
     layers_.clear();
@@ -106,12 +106,12 @@ Instance::Instance(const char *app_name, bool enable_validation) {
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     app_info.pNext = nullptr;
-    app_info.pApplicationName = app_name;
-    app_info.applicationVersion = 0;
-    app_info.pEngineName = "EcasVulkan";
-    app_info.engineVersion = 0;
-    app_info.apiVersion = VK_API_VERSION_1_1;
-
+    app_info.pApplicationName = "EcasVulkan";
+    app_info.applicationVersion = 0; // VK_MAKE_API_VERSION(0, 1, 0, 0);
+    app_info.pEngineName = "Compute";
+    app_info.engineVersion = 0; // VK_MAKE_API_VERSION(0, 1, 0, 0);
+    app_info.apiVersion = VK_API_VERSION_1_1; // VK_MAKE_API_VERSION(0, 1, 1, 0);
+    
     VkInstanceCreateInfo create_info = {};
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     create_info.pNext = nullptr;

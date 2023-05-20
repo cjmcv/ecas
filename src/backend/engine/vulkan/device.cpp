@@ -8,9 +8,7 @@
 namespace ecas {
 namespace vulkan {
 
-// Selects a queue family with the required |queue_flags| in |physical_device|
-// If found, writes the |valid_timestamp_bits| and returns the queue family
-// index.
+// 按需检索物理设备中的队列簇，并返回对应队列簇在该物理设备上的id号
 uint32_t Device::SelectQueueFamily(VkPhysicalDevice physical_device,
                                    VkQueueFlags queue_flags) {
     uint32_t count;
@@ -29,6 +27,29 @@ uint32_t Device::SelectQueueFamily(VkPhysicalDevice physical_device,
 
     ECAS_LOGE("Instance::SelectQueueFamily -> Cannot find queue family with required bits.");
     return 0;
+}
+
+void Device::QueueSubmitAndWait(VkCommandBuffer command_buffer) {
+    VkFenceCreateInfo fence_create_info = {};
+    fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_create_info.pNext = nullptr;
+    fence_create_info.flags = 0;
+
+    VkFence fence = VK_NULL_HANDLE;
+    vkCreateFence(device_, &fence_create_info, /*pALlocator=*/nullptr, &fence);
+
+    VkSubmitInfo submit_info = {};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &command_buffer;
+
+    vkQueueSubmit(queue_, 1, &submit_info, fence);
+
+    vkWaitForFences(device_, /*fenceCount=*/1, &fence,
+                                                /*waitAll=*/true,
+                                                /*timeout=*/UINT64_MAX);
+
+    vkDestroyFence(device_, fence, /*pAllocator=*/nullptr);
 }
 
 Device::Device(VkPhysicalDevice physical_device, VkQueueFlags queue_flags, 
@@ -64,9 +85,18 @@ Device::Device(VkPhysicalDevice physical_device, VkQueueFlags queue_flags,
     vkGetPhysicalDeviceMemoryProperties(physical_device_, &memory_properties_);
     // Get a handle to the only member of the queue family.
     vkGetDeviceQueue(device_, queue_family_index_, 0, &queue_);
+
+    // Create Command pool
+    VkCommandPoolCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    create_info.pNext = nullptr;
+    create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    create_info.queueFamilyIndex = queue_family_index_;
+    vkCreateCommandPool(device_, &create_info, /*pAllocator=*/nullptr, &command_pool_);
 }
 
 Device::~Device() {
+    vkDestroyCommandPool(device_, command_pool_, NULL);	
     vkDestroyDevice(device_, NULL);
 }
 
