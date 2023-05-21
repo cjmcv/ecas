@@ -11,8 +11,8 @@ namespace util {
 
 bool InternalThread::IsMustStop() {
     if (thread_ && interrupt_flag_) {
-      interrupt_flag_ = false;
-      return true;
+        interrupt_flag_ = false;
+        return true;
     }
     return false;
 }

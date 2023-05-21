@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "buffer.hpp"
+
 namespace ecas {
 namespace vulkan {
 
@@ -29,14 +31,18 @@ public:
 
     // Allocates descriptor sets following the given |set_layouts| and returns the
     // mapping from the layout to the concrete set object.
-    std::unordered_map<VkDescriptorSetLayout, VkDescriptorSet>
-    AllocateDescriptorSets(std::vector<VkDescriptorSetLayout> &set_layouts);
+    void AllocateDescriptorSets(std::vector<VkDescriptorSetLayout> &set_layouts);
+
+    inline VkDescriptorSet GetDescriptorSet(VkDescriptorSetLayout layout) { return layout_set_map_[layout]; }
+    // 
+    void WriteBuffer(VkDescriptorSet set, uint32_t bind, Buffer *buffer, VkDeviceSize offset = 0);
 
 private:
     DescriptorPool(VkDescriptorPool pool, VkDevice device);
     
     VkDevice device_;
     VkDescriptorPool pool_;
+    std::unordered_map<VkDescriptorSetLayout, VkDescriptorSet> layout_set_map_;
 };
 
 }  // namespace vulkan

@@ -46,8 +46,6 @@ public:
     // Returns all descriptor set layout objects for this shader module.
     std::vector<VkDescriptorSetLayout> descriptor_set_layouts() const;
 
-    VkDescriptorSetLayout GetDescriptorSetLayout(uint32_t set) const;
-
     // Calculates minimal pool size requirements for each descriptor type used in
     // this shader module.
     std::vector<VkDescriptorPoolSize> CalculateDescriptorPoolSize() const;

@@ -14,12 +14,17 @@
 #include "descriptor_pool.hpp"
 #include "command_buffer.hpp"
 
-const int WIDTH = 3200; // Size of rendered mandelbrot set.
-const int HEIGHT = 2400; // Size of renderered mandelbrot set.
-const int WORKGROUP_SIZE = 32; // Workgroup size in compute shader.
+#include "../engine.hpp"
 
 namespace ecas {
 namespace vulkan {
+
+class VulkanEngine: public Engine {
+
+};
+
+const int WIDTH = 3200; // Size of rendered mandelbrot set.
+const int HEIGHT = 2400; // Size of renderered mandelbrot set.
 
 class ComputeApplication {
 private:
@@ -27,16 +32,11 @@ private:
     struct Pixel {
         float r, g, b, a;
     };
-    
-    VkDescriptorSet descriptorSet;
-
-        
-    uint32_t bufferSize; // size of `buffer` in bytes.
 
 public:
     void run() {
         // Buffer size of the storage buffer that will contain the rendered mandelbrot set.
-        bufferSize = sizeof(Pixel) * WIDTH * HEIGHT;
+        uint32_t bufferSize = sizeof(Pixel) * WIDTH * HEIGHT;
 
         Instance *ins = new Instance(true);
         std::vector<VkPhysicalDevice> phys_devices = ins->EnumeratePhysicalDevices(true);
@@ -63,32 +63,14 @@ public:
         DescriptorPool *des_pool = DescriptorPool::Create(dev->device(), shader_module->num_sets(), pool_sizes);
 
         std::vector<VkDescriptorSetLayout> set_layouts = shader_module->descriptor_set_layouts();
-        auto layout_set_map = des_pool->AllocateDescriptorSets(set_layouts);
-        descriptorSet = layout_set_map[shader_module->GetDescriptorSetLayout(0)];
-
-        ///////////////////
-        {
-            // Specify the buffer to bind to the descriptor.
-            VkDescriptorBufferInfo descriptorBufferInfo = {};
-            descriptorBufferInfo.buffer = buf->buffer();
-            descriptorBufferInfo.offset = 0;
-            descriptorBufferInfo.range = buf->buffer_size();
-
-            VkWriteDescriptorSet writeDescriptorSet = {};
-            writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writeDescriptorSet.dstSet = descriptorSet; // write to this descriptor set.
-            writeDescriptorSet.dstBinding = 0; // write to the first, and only binding.
-            writeDescriptorSet.descriptorCount = 1; // update a single descriptor.
-            writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; // storage buffer.
-            writeDescriptorSet.pBufferInfo = &descriptorBufferInfo;
-
-            // perform the update of the descriptor set.
-            vkUpdateDescriptorSets(dev->device(), 1, &writeDescriptorSet, 0, NULL);            
-        }
+        des_pool->AllocateDescriptorSets(set_layouts);
+        VkDescriptorSet descriptorSet = des_pool->GetDescriptorSet(set_layouts[0]);
+        des_pool->WriteBuffer(descriptorSet, 0, buf);
 
         CommandBuffer *combuf = CommandBuffer::Create(dev->device(), dev->command_pool());
         combuf->Begin();
         combuf->BindPipelineAndDescriptorSets(pip, {descriptorSet});
+        int WORKGROUP_SIZE = 32; // Workgroup size in compute shader.
         combuf->Dispatch((uint32_t)ceil(WIDTH / float(WORKGROUP_SIZE)), (uint32_t)ceil(HEIGHT / float(WORKGROUP_SIZE)), 1);
         combuf->End();
 
@@ -122,7 +104,6 @@ public:
             img_data[i * channels + 2] = (unsigned char)(255.0f * (pmappedMemory[i].r));
             img_data[i * channels + 3] = (unsigned char)(255.0f * (pmappedMemory[i].a));
         }
-        // util::BmpReader img("man4.bmp");
         img.Write("man5.bmp");
     }
 };
@@ -133,6 +114,8 @@ public:
 int VulkanMain() {
     vulkan::ComputeApplication app;
     app.run();
+
+    vulkan::VulkanEngine engine;
 }
 
 }  // end of namespace ecas.

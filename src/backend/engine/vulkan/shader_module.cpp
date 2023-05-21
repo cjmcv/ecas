@@ -77,10 +77,6 @@ std::vector<VkDescriptorSetLayout> ShaderModule::descriptor_set_layouts() const 
     return vk_set_layouts_; // 移动拷贝
 }
 
-VkDescriptorSetLayout ShaderModule::GetDescriptorSetLayout(uint32_t set) const {
-    return set_layouts_[set].layout;
-}
-
 std::vector<VkDescriptorPoolSize> ShaderModule::CalculateDescriptorPoolSize()
     const {
     std::unordered_map<VkDescriptorType, uint32_t> descriptor_counts;
