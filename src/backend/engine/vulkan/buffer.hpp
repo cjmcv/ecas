@@ -14,10 +14,10 @@ namespace vulkan {
 class Buffer {
 public:
     // Create VkBuffer, Allocate VkDeviceMemory, and bind the buffer and memory
-    Buffer(VkDevice device, VkPhysicalDeviceMemoryProperties memory_properties,
-           VkBufferUsageFlags usage_flags, 
-           VkMemoryPropertyFlags memory_flags,
-           VkDeviceSize size);
+    static Buffer* Create(VkDevice device, VkPhysicalDeviceMemoryProperties &memory_properties,
+                          VkBufferUsageFlags usage_flags, 
+                          VkMemoryPropertyFlags memory_flags,
+                          VkDeviceSize size);
 
     ~Buffer();
 
@@ -31,14 +31,17 @@ public:
     void UnmapMemory();
 
 private:
-    uint32_t SelectMemoryType(uint32_t supported_memory_types,
-                              VkMemoryPropertyFlags desired_memory_properties);
-    VkDeviceMemory AllocateMemory(VkMemoryRequirements memory_requirements,
-                                  VkMemoryPropertyFlags memory_flags);
+    Buffer(VkDevice device, VkBuffer buffer, VkDeviceSize size, VkDeviceMemory memory);
+    static uint32_t SelectMemoryType(VkPhysicalDeviceMemoryProperties &memory_properties,
+                                     uint32_t supported_memory_types,
+                                     VkMemoryPropertyFlags desired_memory_properties);
+    static VkDeviceMemory AllocateMemory(VkDevice device, 
+                                         VkPhysicalDeviceMemoryProperties &memory_properties,
+                                         VkMemoryRequirements memory_requirements,
+                                         VkMemoryPropertyFlags memory_flags);
 
 private: 
     VkDevice device_;
-    VkPhysicalDeviceMemoryProperties memory_properties_;
 
     VkBuffer buffer_;
     uint32_t buffer_size_;

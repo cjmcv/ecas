@@ -20,28 +20,30 @@ namespace vulkan {
 
 class Device {
 public:
-    Device(VkPhysicalDevice physical_device, VkQueueFlags queue_flags,
-           std::vector<const char*> &layers);
+    static Device *Create(VkPhysicalDevice physical_device, VkQueueFlags queue_flags,
+                          std::vector<const char*> &layers);
     ~Device();
 
     inline VkDevice device() const { return device_; }
     inline VkCommandPool command_pool() const { return command_pool_; }
-    inline VkPhysicalDeviceMemoryProperties memory_properties() const { return memory_properties_; }
+    inline VkPhysicalDeviceMemoryProperties &memory_properties() { return memory_properties_; }
 
     void QueueSubmitAndWait(VkCommandBuffer command_buffer);
     
 private:
+    Device(VkDevice device, VkCommandPool command_pool, 
+           VkPhysicalDevice physical_device, uint32_t queue_family_index);
+
     // Retrieve the queue family in the physical device as needed 
     // and return the index of the corresponding queue family
-    uint32_t SelectQueueFamily(VkPhysicalDevice physical_device,
-                               VkQueueFlags queue_flags);
+    static uint32_t SelectQueueFamily(VkPhysicalDevice physical_device, VkQueueFlags queue_flags);
 
     VkDevice device_;
-    VkPhysicalDevice physical_device_;
+    VkCommandPool command_pool_;    
+    
+    // Get.
     VkPhysicalDeviceMemoryProperties memory_properties_;
-    uint32_t queue_family_index_;
     VkQueue queue_;
-    VkCommandPool command_pool_;
 };
 
 }  // namespace vulkan

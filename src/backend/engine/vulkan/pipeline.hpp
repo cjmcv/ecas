@@ -30,10 +30,17 @@ public:
 
         size_t size() const;
     };
-
+    union PushConstant {
+        int i;
+        float f;
+    };
     // Creates a Vulkan compute pipeline
-    static Pipeline *Create(VkDevice device, const ShaderModule &shader_module,
-                            const char *entry_point, std::vector<SpecConstant> &spec_constants);
+    static Pipeline *Create(VkDevice device, 
+                           VkShaderModule shader_module, 
+                           std::vector<VkDescriptorSetLayout> &set_layouts,
+                           const char *entry_point, 
+                           std::vector<Pipeline::SpecConstant> &spec_constants,
+                           uint32_t push_constant_count);
 
     ~Pipeline();
 

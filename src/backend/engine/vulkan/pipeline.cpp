@@ -63,13 +63,15 @@ size_t Pipeline::SpecConstant::size() const {
     }
 }
 
-Pipeline *Pipeline::Create(VkDevice device, const ShaderModule &shader_module, 
+Pipeline *Pipeline::Create(VkDevice device, 
+                           VkShaderModule shader_module, 
+                           std::vector<VkDescriptorSetLayout> &set_layouts,
                            const char *entry_point, 
-                           std::vector<Pipeline::SpecConstant> &spec_constants) {
+                           std::vector<Pipeline::SpecConstant> &spec_constants,
+                           uint32_t push_constant_num) {
   
     // Pack the specialization constant into an byte buffer
     SpecConstantData spec_constant_data = PackSpecConstantData(spec_constants);
-    VkSpecializationInfo spec_constant_info = {};
 
     VkPipelineShaderStageCreateInfo shader_stage_create_info = {};
     shader_stage_create_info.sType =
@@ -77,9 +79,10 @@ Pipeline *Pipeline::Create(VkDevice device, const ShaderModule &shader_module,
     shader_stage_create_info.pNext = nullptr;
     shader_stage_create_info.flags = 0;
     shader_stage_create_info.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    shader_stage_create_info.module = shader_module.shader_module();
+    shader_stage_create_info.module = shader_module;
     shader_stage_create_info.pName = entry_point;
 
+    VkSpecializationInfo spec_constant_info = {};
     // Update specialization information
     if (!spec_constants.empty()) {
         spec_constant_info.mapEntryCount = spec_constant_data.entries.size();
@@ -92,18 +95,26 @@ Pipeline *Pipeline::Create(VkDevice device, const ShaderModule &shader_module,
         shader_stage_create_info.pSpecializationInfo = nullptr;
     }
 
+    VkPushConstantRange push_constant_range;
+    push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = sizeof(PushConstant) * push_constant_num; 
+
     VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
     pipeline_layout_create_info.sType =
         VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_create_info.pNext = nullptr;
     pipeline_layout_create_info.flags = 0;
-    pipeline_layout_create_info.setLayoutCount =
-        shader_module.descriptor_set_layouts().size();
-    pipeline_layout_create_info.pSetLayouts =
-        shader_module.descriptor_set_layouts().data();
-    // TODO: support push constants
-    pipeline_layout_create_info.pushConstantRangeCount = 0;
-    pipeline_layout_create_info.pPushConstantRanges = nullptr;
+    pipeline_layout_create_info.setLayoutCount = set_layouts.size();
+    pipeline_layout_create_info.pSetLayouts = set_layouts.data();
+    if (push_constant_num == 0) {
+        pipeline_layout_create_info.pushConstantRangeCount = 0;
+        pipeline_layout_create_info.pPushConstantRanges = nullptr;
+    }
+    else {
+        pipeline_layout_create_info.pushConstantRangeCount = 1;
+        pipeline_layout_create_info.pPushConstantRanges = &push_constant_range;        
+    }
 
     VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
     vkCreatePipelineLayout(device, &pipeline_layout_create_info,
@@ -119,9 +130,12 @@ Pipeline *Pipeline::Create(VkDevice device, const ShaderModule &shader_module,
     pipeline_create_info.basePipelineIndex = 0;
 
     VkPipeline pipeline = VK_NULL_HANDLE;
-    vkCreateComputePipelines(device, /*pipelineCache=*/VK_NULL_HANDLE,
-                             /*createInfoCount=*/1, &pipeline_create_info,
-                             /*pAllocator=*/nullptr, &pipeline);
+    vkCreateComputePipelines(device, 
+                             /*pipelineCache=*/VK_NULL_HANDLE,
+                             /*createInfoCount=*/1, 
+                             &pipeline_create_info,
+                             /*pAllocator=*/nullptr, 
+                             &pipeline);
 
     return new Pipeline(pipeline, device, pipeline_layout);
 }
