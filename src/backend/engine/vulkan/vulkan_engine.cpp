@@ -42,107 +42,127 @@ void VulkanEngine::Init(int physical_device_id, bool enable_validation) {
     device_ = Device::Create(phys_devices[physical_device_id], VK_QUEUE_COMPUTE_BIT, instance_->layers());
 
     SetKernelMap();
-    std::unordered_map<std::string, KernelResPack*>::iterator it = res_map_.begin();
-    while (it != res_map_.end()) {
-        KernelResPack *res = it->second;
+    std::unordered_map<std::string, ExecUnit*>::iterator it = exec_map_.begin();
+    while (it != exec_map_.end()) {
+        ExecUnit *res = it->second;
+        KernelParams *params = res->params;
 
+        res->device_ = device_;
         std::vector<VkDescriptorType> type{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER};
         std::string kernel_path = (std::string)"../src/kernel/vulkan/shaders/" + it->first + ".spv";
-        ShaderModule *shader_module = ShaderModule::Create(device_->device(), type, kernel_path.c_str());
+        res->shader_module_ = ShaderModule::Create(device_->device(), type, kernel_path.c_str());
         //
-        std::vector<VkDescriptorSetLayout> set_layouts = shader_module->descriptor_set_layouts();
-        Pipeline *pipeline = Pipeline::Create(device_->device(), shader_module->shader_module(), 
-                                              set_layouts, "main", res->spec_constant, res->push_constant_num); 
+        std::vector<VkDescriptorSetLayout> set_layouts = res->shader_module_->descriptor_set_layouts();
+        res->pipeline_ = Pipeline::Create(device_->device(), res->shader_module_->shader_module(), 
+                                              set_layouts, "main", params->spec_constant, params->push_constant_num); 
         //
-        auto pool_sizes = shader_module->CalculateDescriptorPoolSize();
-        DescriptorPool *descriptor_pool = DescriptorPool::Create(device_->device(), shader_module->num_sets(), pool_sizes);
-        descriptor_pool->AllocateDescriptorSets(set_layouts);
-        VkDescriptorSet descriptor_set = descriptor_pool->GetDescriptorSet(set_layouts[0]);
+        auto pool_sizes = res->shader_module_->CalculateDescriptorPoolSize();
+        res->descriptor_pool_ = DescriptorPool::Create(device_->device(), res->shader_module_->num_sets(), pool_sizes);
+        res->descriptor_pool_->AllocateDescriptorSets(set_layouts);
+        res->descriptor_set_ = res->descriptor_pool_->GetDescriptorSet(set_layouts[0]);
         //
-        uint32_t buffer_size = sizeof(Pixel) * WIDTH * HEIGHT;
-        Buffer *buffer = Buffer::Create(device_->device(),
+        res->buffer_size_ = sizeof(Pixel) * WIDTH * HEIGHT;
+        res->buffer_ = Buffer::Create(device_->device(),
                                      device_->memory_properties(),
                                      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                     buffer_size);
-
-        descriptor_pool->WriteBuffer(descriptor_set, 0, buffer);
-        //
-        CommandBuffer *command_buffer = CommandBuffer::Create(device_->device(), device_->command_pool());
-        command_buffer->Begin();
-        command_buffer->BindPipelineAndDescriptorSets(pipeline, {descriptor_set});
-        int WORKGROUP_SIZE = 32; // Workgroup size in compute shader.
-        command_buffer->Dispatch((uint32_t)ceil(WIDTH / float(WORKGROUP_SIZE)), (uint32_t)ceil(HEIGHT / float(WORKGROUP_SIZE)), 1);
-        command_buffer->End();
-
-        //
-        res->buffer_size = buffer_size;
-        res->command_buffer = command_buffer;
-        res->buffer = buffer;
-        res->descriptor_pool = descriptor_pool;
-        res->pipeline = pipeline;
-        res->shader_module = shader_module;
-        printf("Finish VulkanEngine::Init.\n");
+                                     res->buffer_size_);
+        res->command_buffer_ = CommandBuffer::Create(device_->device(), device_->command_pool());
 
         it++;
+        printf("Finish VulkanEngine::Init.\n");
     }
 }
 
 void VulkanEngine::Deinit() {
-    // Cleanup res_map_
-    std::unordered_map<std::string, KernelResPack*>::iterator it = res_map_.begin();
-    while (it != res_map_.end()) {
-        KernelResPack *res = it->second;
-        delete res->command_buffer;
-        delete res->buffer;
-        delete res->descriptor_pool;
-        delete res->pipeline;
-        delete res->shader_module;
+    // Cleanup exec_map_
+    std::unordered_map<std::string, ExecUnit*>::iterator it = exec_map_.begin();
+    while (it != exec_map_.end()) {
+        ExecUnit *res = it->second;
+        delete res->command_buffer_;
+        delete res->buffer_;
+        delete res->descriptor_pool_;
+        delete res->pipeline_;
+        delete res->shader_module_;
+        delete res->params;
+        delete res;
+        it++;
     }
-
     delete device_;
     delete instance_;
 }
 
 void VulkanEngine::SetKernelMap() {
     {
-        KernelResPack *res = new KernelResPack;
-        res->spec_constant = {
+        ExecUnit *res = new ExecUnit;
+
+        KernelParams *params = new KernelParams;
+        params->spec_constant = {
             // {0, Pipeline::SpecConstant::Type::u32, output_h},
             // {1, Pipeline::SpecConstant::Type::u32, output_w},
         };
-        res->push_constant_num = 0;
-        res_map_["mandelbrot"] = res;
+        params->push_constant_num = 0;
+        params->workgroup_size[0] = 32;
+        params->workgroup_size[1] = 32;
+        params->workgroup_size[2] = 1;
+
+        res->params = params;
+        exec_map_["mandelbrot"] = res;
+    }
+    {
+        
     }
 }
 
 void VulkanEngine::Run(std::string kernel_name) {
-    std::unordered_map<std::string, KernelResPack*>::iterator it = res_map_.find(kernel_name);
-    if (it == res_map_.end()) {
-        ECAS_LOGE("Can not find Op: %s.\n", kernel_name);
+    std::unordered_map<std::string, ExecUnit*>::iterator it = exec_map_.find(kernel_name);
+    if (it == exec_map_.end()) {
+        // ECAS_LOGE("Can not find Op: %s.\n", kernel_name.c_str());
+        printf("Can not find Op: %s.\n", kernel_name.c_str());
         return;
     }
-    KernelResPack *res = it->second;
+    ExecUnit *res = it->second;
+    res->Run();
+}
 
-    printf("1.\n");
-    device_->QueueSubmitAndWait(res->command_buffer->command_buffer());
+/////
 
-    void *mapped_data = res->buffer->MapMemory(0, res->buffer_size);
+void VulkanEngine::ExecUnit::Run() {
     static int idx = 0;
     idx++;
     printf("round idx: %d.\n", idx);
+
+    descriptor_pool_->WriteBuffer(descriptor_set_, 0, buffer_);
+
+    command_buffer_->Begin();
+    command_buffer_->BindPipelineAndDescriptorSets(pipeline_, {descriptor_set_});
+    command_buffer_->Dispatch((uint32_t)ceil(WIDTH / float(params->workgroup_size[0])), 
+                             (uint32_t)ceil(HEIGHT / float(params->workgroup_size[1])), 
+                             1);
+    command_buffer_->End();
+
+    device_->QueueSubmitAndWait(command_buffer_->command_buffer());
+    void *mapped_data = buffer_->MapMemory(0, buffer_size_);
     saveRenderedImage(mapped_data, idx);
-    res->buffer->UnmapMemory();
+    buffer_->UnmapMemory();
 }
 
 }  // namespace vulkan
 
 
 int VulkanMain() {
+    printf("VulkanMain Start.\n");
+
     vulkan::VulkanEngine engine;
-    engine.Init(true);
-    for (int i=0; i<10; i++)
-        engine.Run("mandelbrot");
+    engine.Init(0, true);
+    for (int i=0; i<5; i++) {
+        engine.Run("mandelbrot");        
+    }
+    engine.Deinit();
+
+    printf("VulkanMain End.\n");
+
+    return 0;
 }
 
 }  // end of namespace ecas.

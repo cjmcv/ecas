@@ -20,16 +20,30 @@
 namespace ecas {
 namespace vulkan {
 
+// 固定参数，在kernel注册时指定
+struct KernelParams {
+    std::vector<Pipeline::SpecConstant> spec_constant;
+    uint32_t push_constant_num;
+    uint32_t workgroup_size[3];
+};
+
 class VulkanEngine: public Engine {
-    struct KernelResPack {
-        ShaderModule *shader_module;
-        std::vector<Pipeline::SpecConstant> spec_constant;
-        uint32_t push_constant_num;
-        Pipeline *pipeline;
-        Buffer *buffer;
-        uint32_t buffer_size;
-        DescriptorPool *descriptor_pool;
-        CommandBuffer *command_buffer;
+    // kernel运行所需资源单元。由Engine创建，一个kernel对应一个executor
+    class ExecUnit {
+    public:
+        void Run();
+
+        KernelParams *params;
+        Device *device_;
+        ShaderModule *shader_module_;
+        //
+        Pipeline *pipeline_;
+        Buffer *buffer_;
+        uint32_t buffer_size_;
+        DescriptorPool *descriptor_pool_;
+        CommandBuffer *command_buffer_;
+        //
+        VkDescriptorSet descriptor_set_;
     };
 
 public:
@@ -44,7 +58,7 @@ private:
     Instance *instance_;
     Device *device_;
 
-    std::unordered_map<std::string, KernelResPack*> res_map_;
+    std::unordered_map<std::string, ExecUnit*> exec_map_;
 };
 
 } // namespace vulkan

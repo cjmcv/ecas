@@ -52,7 +52,7 @@ uint32_t RingBuffer::GetFreeSize(){
 }
 
 bool RingBuffer::Write(char *data,const uint32_t size, bool is_blocking) {
-    if ((NULL == data) || (0 == size) || (size > capacity_))
+    if ((nullptr == data) || (0 == size) || (size > capacity_))
         return false;
 
     pthread_mutex_lock(&mutex_);
@@ -92,7 +92,7 @@ bool RingBuffer::Write(char *data,const uint32_t size, bool is_blocking) {
 }
 
 bool RingBuffer::Read(char *data, const uint32_t size, bool is_blocking) {
-    if ((NULL == data) ||  (0 == size) || (size > capacity_))
+    if ((0 == size) || (size > capacity_))
         return false;
         
     pthread_mutex_lock(&mutex_);
@@ -104,19 +104,19 @@ bool RingBuffer::Read(char *data, const uint32_t size, bool is_blocking) {
             return false;
     }
     if(head_ >= tail_) {
-        memcpy(data, tail_, size);
+        if (data != nullptr) memcpy(data, tail_, size);
         tail_ += size;
     }
     else if (head_ < tail_) {
         if (size <= (end_ - tail_)) {
-            memcpy(data, tail_, size);
+            if (data != nullptr) memcpy(data, tail_, size);
             tail_ += size;
         }
         else {
             int tmp_size = end_ - tail_;
-            memcpy(data, tail_, tmp_size);
+            if (data != nullptr) memcpy(data, tail_, tmp_size);
             tail_ = start_; 
-            memcpy(data + tmp_size, tail_, size - tmp_size);
+            if (data != nullptr) memcpy(data + tmp_size, tail_, size - tmp_size);
             tail_ += size-tmp_size;
         }
     }
