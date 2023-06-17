@@ -18,7 +18,7 @@
 
 namespace ecas {
 
-AsyncGraph::AsyncGraph(const std::string &name, ExecutionMode mode, int num_thread, TensorPool *tensor_pool) {
+AsyncGraph::AsyncGraph(const std::string &name, ExecutionMode mode, int num_thread, Allocator *allocator) {
     name_ = name;
     mode_ = mode;
     num_thread_ = num_thread;
@@ -30,7 +30,7 @@ AsyncGraph::AsyncGraph(const std::string &name, ExecutionMode mode, int num_thre
     input_node_ = nullptr;
     output_node_ = nullptr;
 
-    tensor_pool_ = tensor_pool;
+    allocator_ = allocator;
 }
 
 AsyncGraph::~AsyncGraph() {
@@ -104,7 +104,7 @@ void AsyncGraph::SetupInteractTensors() {
             // Check passed and allocate BlockingQueuePair.
             std::vector<int> tensor_shapes;
             tensor_shapes.assign(input_dims[si].begin() + 1, input_dims[si].end());
-            BlockingQueuePair *bqp = tensor_pool_->CreateBlockingQueue(tensor_shapes, (DataType)input_dims[si][0]);
+            BlockingQueuePair *bqp = allocator_->CreateBlockingQueue(tensor_shapes, (DataType)input_dims[si][0]);
             bqp->front_name = in_node->name();
             bqp->rear_name = n->name();
             in_node->AppendOutputs(bqp);
@@ -124,13 +124,13 @@ void AsyncGraph::SetupIoTensors() {
 
     // Skip data type saved in shape[0].
     tensor_shapes.assign(input_node_->input_dims()[0].begin() + 1, input_node_->input_dims()[0].end());
-    bqp = tensor_pool_->CreateBlockingQueue(tensor_shapes, (DataType)input_node_->input_dims()[0][0]);
+    bqp = allocator_->CreateBlockingQueue(tensor_shapes, (DataType)input_node_->input_dims()[0][0]);
     bqp->front_name = "input";
     bqp->rear_name = input_node_->name();
     input_node_->AppendInputs(bqp);
 
     tensor_shapes.assign(output_node_->output_dims()[0].begin() + 1, output_node_->output_dims()[0].end());
-    bqp = tensor_pool_->CreateBlockingQueue(tensor_shapes, (DataType)output_node_->output_dims()[0][0]);
+    bqp = allocator_->CreateBlockingQueue(tensor_shapes, (DataType)output_node_->output_dims()[0][0]);
     bqp->front_name = output_node_->name();
     bqp->rear_name = "output";
     output_node_->AppendOutputs(bqp);
@@ -285,7 +285,7 @@ void AsyncGraph::StartProfile() {
     is_profiler_start_ = true;
     std::thread *t = new std::thread([this]() -> void {
         while (is_profiler_start_ == true) {
-            tensor_pool_->PrintInfo();
+            allocator_->PrintInfo();
             std::this_thread::sleep_for(std::chrono::seconds(3));
         }
     });
@@ -303,7 +303,7 @@ void AsyncGraph::Start(void *usr) {
 
 void AsyncGraph::Stop() {        
     // Stop all task threads.
-    scheduler_.TasksStop(tensor_pool_);
+    scheduler_.TasksStop(allocator_);
     scheduler_.TasksJoin();
     // EndProfile();
     ECAS_LOGI("AsyncGraph::Stop().\n");

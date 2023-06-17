@@ -7,9 +7,6 @@
 #include "util/bmp_reader.hpp"
 #include "vulkan_engine.hpp"
 
-namespace ecas {
-namespace vulkan {
-
 const int WIDTH = 3200; // Size of rendered mandelbrot set.
 const int HEIGHT = 2400; // Size of renderered mandelbrot set.
 
@@ -17,6 +14,9 @@ const int HEIGHT = 2400; // Size of renderered mandelbrot set.
 struct Pixel {
     float r, g, b, a;
 };
+
+namespace ecas {
+namespace vulkan {
 
 void saveRenderedImage(void *mappedMemory, int idx) {
     Pixel *pmappedMemory = (Pixel *)mappedMemory;
@@ -48,25 +48,18 @@ void VulkanEngine::Init(int physical_device_id, bool enable_validation) {
         KernelParams *params = res->params;
 
         res->device_ = device_;
-        std::vector<VkDescriptorType> type{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER};
         std::string kernel_path = (std::string)"../src/kernel/vulkan/shaders/" + it->first + ".spv";
-        res->shader_module_ = ShaderModule::Create(device_->device(), type, kernel_path.c_str());
+        res->shader_module_ = ShaderModule::Create(device_->device(), params->buffer_type, kernel_path.c_str());
         //
         std::vector<VkDescriptorSetLayout> set_layouts = res->shader_module_->descriptor_set_layouts();
         res->pipeline_ = Pipeline::Create(device_->device(), res->shader_module_->shader_module(), 
-                                              set_layouts, "main", params->spec_constant, params->push_constant_num); 
+                                          set_layouts, "main", params->spec_constant, params->push_constant_num); 
         //
         auto pool_sizes = res->shader_module_->CalculateDescriptorPoolSize();
         res->descriptor_pool_ = DescriptorPool::Create(device_->device(), res->shader_module_->num_sets(), pool_sizes);
         res->descriptor_pool_->AllocateDescriptorSets(set_layouts);
         res->descriptor_set_ = res->descriptor_pool_->GetDescriptorSet(set_layouts[0]);
-        //
-        res->buffer_size_ = sizeof(Pixel) * WIDTH * HEIGHT;
-        res->buffer_ = Buffer::Create(device_->device(),
-                                     device_->memory_properties(),
-                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                     res->buffer_size_);
+
         res->command_buffer_ = CommandBuffer::Create(device_->device(), device_->command_pool());
 
         it++;
@@ -80,7 +73,6 @@ void VulkanEngine::Deinit() {
     while (it != exec_map_.end()) {
         ExecUnit *res = it->second;
         delete res->command_buffer_;
-        delete res->buffer_;
         delete res->descriptor_pool_;
         delete res->pipeline_;
         delete res->shader_module_;
@@ -97,12 +89,12 @@ void VulkanEngine::SetKernelMap() {
         ExecUnit *res = new ExecUnit;
 
         KernelParams *params = new KernelParams;
-        params->spec_constant = {
-            // {0, Pipeline::SpecConstant::Type::u32, output_h},
-            // {1, Pipeline::SpecConstant::Type::u32, output_w},
+        params->buffer_type = { 
+            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
         };
+        params->spec_constant = {};
         params->push_constant_num = 0;
-        params->workgroup_size[0] = 32;
+        params->workgroup_size[0] = 32; // TODO: 在comp中写死了，这里的设定只是计算dispatch的group数量，考虑用特化常量
         params->workgroup_size[1] = 32;
         params->workgroup_size[2] = 1;
 
@@ -110,11 +102,39 @@ void VulkanEngine::SetKernelMap() {
         exec_map_["mandelbrot"] = res;
     }
     {
+        ExecUnit *res = new ExecUnit;
+
+        KernelParams *params = new KernelParams;
+        params->buffer_type = { 
+            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER      // VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+        };
         
+        params->spec_constant = {
+            {0, Pipeline::SpecConstant::Type::u32, 640},
+            {1, Pipeline::SpecConstant::Type::u32, 640},
+            {2, Pipeline::SpecConstant::Type::u32, 640},
+        };
+        params->push_constant_num = 0;
+        params->workgroup_size[0] = 16;
+        params->workgroup_size[1] = 1;
+        params->workgroup_size[2] = 1;
+
+        res->params = params;
+        exec_map_["matmul_tiled_fp32"] = res;
     }
 }
 
-void VulkanEngine::Run(std::string kernel_name) {
+Buffer *VulkanEngine::CreateBuffer(uint32_t size) {
+    return Buffer::Create(device_->device(),
+                          device_->memory_properties(),
+                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                          size);
+}
+
+void VulkanEngine::Run(std::string kernel_name, Buffer *buffer) {
     std::unordered_map<std::string, ExecUnit*>::iterator it = exec_map_.find(kernel_name);
     if (it == exec_map_.end()) {
         // ECAS_LOGE("Can not find Op: %s.\n", kernel_name.c_str());
@@ -122,17 +142,17 @@ void VulkanEngine::Run(std::string kernel_name) {
         return;
     }
     ExecUnit *res = it->second;
-    res->Run();
+    res->Run(buffer);
 }
 
 /////
 
-void VulkanEngine::ExecUnit::Run() {
+void VulkanEngine::ExecUnit::Run(Buffer *buffer) {
     static int idx = 0;
     idx++;
     printf("round idx: %d.\n", idx);
 
-    descriptor_pool_->WriteBuffer(descriptor_set_, 0, buffer_);
+    descriptor_pool_->WriteBuffer(descriptor_set_, 0, buffer);
 
     command_buffer_->Begin();
     command_buffer_->BindPipelineAndDescriptorSets(pipeline_, {descriptor_set_});
@@ -142,9 +162,9 @@ void VulkanEngine::ExecUnit::Run() {
     command_buffer_->End();
 
     device_->QueueSubmitAndWait(command_buffer_->command_buffer());
-    void *mapped_data = buffer_->MapMemory(0, buffer_size_);
+    void *mapped_data = buffer->MapMemory(0, buffer->buffer_size());
     saveRenderedImage(mapped_data, idx);
-    buffer_->UnmapMemory();
+    buffer->UnmapMemory();
 }
 
 }  // namespace vulkan
@@ -155,9 +175,15 @@ int VulkanMain() {
 
     vulkan::VulkanEngine engine;
     engine.Init(0, true);
+
+    uint32_t size = sizeof(Pixel) * WIDTH * HEIGHT;
+    vulkan::Buffer *buf = engine.CreateBuffer(size);
+
     for (int i=0; i<5; i++) {
-        engine.Run("mandelbrot");        
+        engine.Run("mandelbrot", buf);        
     }
+
+    delete buf;
     engine.Deinit();
 
     printf("VulkanMain End.\n");

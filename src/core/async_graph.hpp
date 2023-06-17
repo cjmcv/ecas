@@ -15,7 +15,7 @@ namespace ecas {
 
 class AsyncGraph {
 public:
-    AsyncGraph(const std::string &name, ExecutionMode mode, int num_thread, TensorPool *tensor_pool);
+    AsyncGraph(const std::string &name, ExecutionMode mode, int num_thread, Allocator *allocator);
     ~AsyncGraph();
 
     void CreateNode(const std::string &name, Task &&task, 
@@ -56,7 +56,7 @@ private:
     Topology topo_;
     void *usr_;
     Scheduler scheduler_;
-    TensorPool *tensor_pool_;
+    Allocator *allocator_;
 
     bool is_profiler_start_;
 };

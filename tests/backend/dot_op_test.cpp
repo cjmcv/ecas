@@ -21,8 +21,8 @@ void DotOpTest() {
 
     int len = 300;
     std::vector<int> shapei = {len};
-    inputs.push_back(new Tensor(shapei, ecas::FP32, nullptr));
-    inputs.push_back(new Tensor(shapei, ecas::FP32, nullptr));
+    inputs.push_back(new Tensor(shapei, ecas::FP32)); // TODO: 内存未分配
+    inputs.push_back(new Tensor(shapei, ecas::FP32));
 
     float *in_data0 = (float *)inputs[0]->GetData();
     float *in_data1 = (float *)inputs[1]->GetData();
@@ -31,7 +31,7 @@ void DotOpTest() {
         in_data1[i] = 2;
     }
     std::vector<int> shapeo = {1};
-    outputs.push_back(new Tensor(shapeo, ecas::FP32, nullptr));
+    outputs.push_back(new Tensor(shapeo, ecas::FP32));
 
     op->Run(params, inputs, outputs);
     EXPECT_EQ(600, ((float *)outputs[0]->GetData())[0]);

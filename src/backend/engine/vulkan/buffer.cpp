@@ -80,4 +80,4 @@ void *Buffer::MapMemory(size_t offset, size_t size) {
 void Buffer::UnmapMemory() { vkUnmapMemory(device_, memory_); }
 
 }  // namespace vulkan
-}  // namespace uvkc
+}  // namespace ecas

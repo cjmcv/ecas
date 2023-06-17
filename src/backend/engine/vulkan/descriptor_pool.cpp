@@ -64,4 +64,4 @@ DescriptorPool::DescriptorPool(VkDescriptorPool pool, VkDevice device)
     : pool_(pool), device_(device) {}
 
 }  // namespace vulkan
-}  // namespace uvkc
+}  // namespace ecas

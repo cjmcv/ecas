@@ -12,7 +12,6 @@
 #include <map>
 
 #include "node.hpp"
-#include "tensor_pool.hpp"
 #include "util/logger.hpp"
 
 namespace ecas {
@@ -42,7 +41,7 @@ public:
     inline int group_size() { return groups_.size(); }
     // inline std::vector<std::vector<Node *>> &group_nodes() { return groups_; };
     void TasksSpawn(void *usr);
-    void TasksStop(TensorPool *pool);
+    void TasksStop(Allocator *pool);
     void TasksJoin();
 
 private:

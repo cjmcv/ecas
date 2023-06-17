@@ -6,7 +6,7 @@
 #define ECAS_CORE_NODE_HPP_
 
 #include <string>
-#include "tensor_pool.hpp"
+#include "allocator.hpp"
 #include "ecas/ecas.hpp"
 
 namespace ecas {

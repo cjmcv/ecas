@@ -6,7 +6,6 @@
 #include "ecas/ecas.hpp"
 
 #include "async_graph.hpp"
-#include "tensor_pool.hpp"
 #include "operator_executor.hpp"
 
 #include "util/logger.hpp"
@@ -27,7 +26,7 @@ namespace ecas {
 /////////////////////////////////////////////
 
 struct SessionParams {
-    TensorPool *tensor_pool; // graph是否要独占一个TensorPool？topology能否给tensorpool提供依赖信息？    
+    Allocator *allocator; // graph是否要独占一个TensorPool？topology能否给tensorpool提供依赖信息？    
     OperatorExecutor *executor;  //      
     AsyncGraph *graph;
 };
@@ -35,8 +34,8 @@ struct SessionParams {
 Session::Session(const std::string &name, SessionConfig &config) {
     SessionParams *p = new SessionParams;
     p->executor = new OperatorExecutor();
-    p->tensor_pool = new TensorPool();
-    p->graph = new AsyncGraph(name, config.mode, config.num_thread, p->tensor_pool);
+    p->allocator = new Allocator();
+    p->graph = new AsyncGraph(name, config.mode, config.num_thread, p->allocator);
     
     params_ = (void *)p;
 }
@@ -45,7 +44,7 @@ Session::~Session() {
     SessionParams *p = (SessionParams *)params_;
     delete p->executor;
     delete p->graph;
-    delete p->tensor_pool;
+    delete p->allocator;
     delete p;
 }
 
@@ -53,7 +52,7 @@ Session::~Session() {
 // Memory
 ITensor *Session::CreateITensor(std::vector<int> &&shape, DataType type, void *data) {
     SessionParams *p = (SessionParams *)params_;
-    Tensor *t = p->tensor_pool->CreateTensor(shape, type, data);
+    Tensor *t = p->allocator->CreateTensor(shape, type, data);
     return t;
 }
 

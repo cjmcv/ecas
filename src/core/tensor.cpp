@@ -8,10 +8,11 @@
 #include <string.h>
 #include "util/logger.hpp"
 #include "util/common.hpp"
+#include "backend/buffer/host_buffer.hpp"
 
 namespace ecas {
 
-Tensor::Tensor(std::vector<int> &shape, DataType type, void *data) {
+Tensor::Tensor(std::vector<int> &shape, DataType type) {
     id_ = -1;
     shape_ = shape;
     type_ = type;
@@ -23,19 +24,17 @@ Tensor::Tensor(std::vector<int> &shape, DataType type, void *data) {
     if (size_ == 0)
         std::abort();
     
-    device_buffer_ = nullptr;    
-    host_buffer_ = new Buffer(size_, data);
+    is_owned_buffer_ = false;
+    buffer_ = nullptr;
     mode_ = ON_HOST;
 }
 
 Tensor::~Tensor() {
-    if (host_buffer_ != nullptr) {
-        delete host_buffer_;
-        host_buffer_ = nullptr;      
-    }
-    if (device_buffer_ != nullptr) {
-        delete device_buffer_;
-        device_buffer_ = nullptr;      
+    if (is_owned_buffer_ == true && 
+        buffer_ != nullptr) {
+
+        delete buffer_;
+        buffer_ = nullptr;      
     }
 }
 
@@ -48,6 +47,10 @@ void Tensor::CheckDimension(ITensor *target) {
             ECAS_LOGE("Tensor::CloneFrom -> shape mismatch.\n");
         }
     }
+}
+
+void Tensor::BindBuffer(Buffer *buffer) {
+    buffer_ = buffer;
 }
 
 void Tensor::CopyFrom(ITensor *in) {
@@ -73,25 +76,31 @@ void Tensor::CopyTo(ITensor *out) {
 }
 
 void Tensor::BindHostDataPtr(void *data) {
-    host_buffer_->SetDataPtr(data);
+    if (buffer_ == nullptr) {
+        ECAS_LOGE("Tensor::BindHostDataPtr -> buffer_ == nullptr.\n");
+    }
+
+    // 只能持有不含内存的host buffer，其他包含内存的buffer均不持有
+    is_owned_buffer_ = true; 
+    buffer_ = new HostBuffer(size_, data);
 }
 
 void *Tensor::GetData(MemoryMode mode) {
     if (mode == ON_HOST) {
         if (mode_ == ON_HOST)
-            return host_buffer_->data();
+            return buffer_->data();
         else {
             // TODO: push data from host to device.
-            return device_buffer_->data();
+
         }
     }
     else {
         if (mode_ == ON_HOST) {
             // TODO: push data from device to host
-            return host_buffer_->data();
+            return buffer_->data();
         }
         else {
-            return device_buffer_->data();
+
         }
     }
 }

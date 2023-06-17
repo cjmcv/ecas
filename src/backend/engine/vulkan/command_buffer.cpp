@@ -90,4 +90,4 @@ void CommandBuffer::DispatchBarrier() {
 }
 
 }  // namespace vulkan
-}  // namespace uvkc
+}  // namespace ecas

@@ -151,4 +151,4 @@ Pipeline::Pipeline(VkPipeline pipeline, VkDevice device, VkPipelineLayout layout
       pipeline_layout_(layout) 
       {}
 }  // namespace vulkan
-}  // namespace uvkc
+}  // namespace ecas

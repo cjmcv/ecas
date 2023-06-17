@@ -46,6 +46,6 @@ private:
 };
 
 }  // namespace vulkan
-}  // namespace uvkc
+}  // namespace ecas
 
 #endif  // ECAS_BACKEND_VULKAN_DESCRIPTOR_POOL_HPP_

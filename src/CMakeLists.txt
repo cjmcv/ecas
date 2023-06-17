@@ -13,6 +13,7 @@ file(GLOB SRC_LIST
     "${CMAKE_CURRENT_LIST_DIR}/core/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/util/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/backend/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/backend/buffer/*.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/kernel/kernel_dispatcher.cpp"
     # Include
     "${INCLUDE_DIR}/*.hpp"

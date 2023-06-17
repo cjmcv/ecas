@@ -133,7 +133,7 @@ void Scheduler::TasksSpawn(void *usr) {
     ECAS_LOGI("Scheduler::TasksSpawn End.\n");
 }
 
-void Scheduler::TasksStop(TensorPool *pool) {
+void Scheduler::TasksStop(Allocator *pool) {
     is_stop_ = true;
     pool->ExitAllBlockingQueue();
 }
