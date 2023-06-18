@@ -72,7 +72,7 @@ Tensor *Allocator::CreateTensor(std::vector<int> &shape, DataType type, void *da
     if (data != nullptr)
         t->BindHostDataPtr(data);
     else {
-        Buffer *buffer = CreateBuffer(ONLY_ON_HOST, t->size());
+        Buffer *buffer = CreateBuffer(ONLY_ON_HOST, t->size());  // TODO: 所有的CreateBuffer外都需要再嵌套一层，检查是否有空余可复用的内存。
         t->BindBuffer(buffer);
         buffers_.push_back(buffer);
     }

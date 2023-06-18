@@ -1,5 +1,7 @@
 
 #include "host_buffer.hpp"
+
+#include <string.h>
 #include "util/logger.hpp"
 
 namespace ecas {
@@ -7,6 +9,7 @@ namespace ecas {
 HostBuffer::HostBuffer(uint32_t size) {
     data_ = nullptr;
     data_ = malloc(size);
+    memset(data_, 0, size);
     size_ = size;
     is_owned_ = true;
 }

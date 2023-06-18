@@ -44,7 +44,7 @@ void TaskA(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::IT
     AlgoTasks *ins = (AlgoTasks *)usr;
     static int count = 0;
     // TODO: 检查维度（用static 检查一次即可），宏定义，归到工具中
-    float *data = (float *)inputs[0]->GetData();
+    float *data = (float *)inputs[0]->GetData(); // 600, 600
     int rows = inputs[0]->shape()[0];
     int cols = inputs[0]->shape()[1];
 
@@ -56,16 +56,16 @@ void TaskA(void *usr, std::vector<ecas::ITensor *> &inputs, std::vector<ecas::IT
         }
     }
 
-    float *out_data0 = (float *)outputs[0]->GetData();
-    float *out_data1 = (float *)outputs[1]->GetData();
-    for (int i=0; i<rows/2; i++) {
+    float *out_data0 = (float *)outputs[0]->GetData(); // 200, 600
+    float *out_data1 = (float *)outputs[1]->GetData(); // 400, 600
+    for (int i=0; i<rows*1/3; i++) {
         for (int j=0; j<cols; j++) {
             out_data0[i*cols + j] = data[i*cols + j];
         }
     }
-    for (int i=rows/2; i<rows; i++) {
+    for (int i=rows*1/3; i<rows; i++) {
         for (int j=0; j<cols; j++) {
-            out_data1[(i-rows/2)*cols + j] = data[i*cols + j] + 1;
+            out_data1[(i-rows*1/3)*cols + j] = data[i*cols + j] + 1;
         }
     }
     printf("TaskA: %d (%d).\n", count++, std::this_thread::get_id());
