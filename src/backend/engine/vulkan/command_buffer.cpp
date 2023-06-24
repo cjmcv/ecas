@@ -49,9 +49,10 @@ void CommandBuffer::CopyBuffer(const Buffer &src_buffer, size_t src_offset,
     region.srcOffset = src_offset;
     region.dstOffset = dst_offset;
     region.size = length;
-    vkCmdCopyBuffer(command_buffer_, src_buffer.buffer(),
-                            dst_buffer.buffer(),
-                            /*regionCount=*/1, &region);
+    vkCmdCopyBuffer(command_buffer_, 
+                    src_buffer.buffer(),
+                    dst_buffer.buffer(),
+                    /*regionCount=*/1, &region);
 }
 
 void CommandBuffer::BindPipelineAndDescriptorSets(
@@ -59,7 +60,7 @@ void CommandBuffer::BindPipelineAndDescriptorSets(
     std::vector<VkDescriptorSet> &&descriptor_sets) {
 
     vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_COMPUTE,
-                             pipeline->pipeline());
+                      pipeline->pipeline());
 
     for (int i=0; i<descriptor_sets.size(); i++) {
         vkCmdBindDescriptorSets(

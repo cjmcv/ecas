@@ -26,7 +26,7 @@ SpecConstantData PackSpecConstantData(
     entries.reserve(spec_constants.size());
 
     uint32_t index = 0;  // Next available byte's index in the buffer
-    for (const auto &spec_const : spec_constants) {
+    for (const auto &spec_const : spec_constants) {  // TODO: 只支持4字节，取消类型
         uint8_t *ptr = data.data() + index;
         switch (spec_const.type) {
         case Pipeline::SpecConstant::Type::s32: {

@@ -33,7 +33,7 @@ class VulkanEngine: public Engine {
     // kernel运行所需资源单元。由Engine创建，一个kernel对应一个executor
     class ExecUnit {
     public:
-        void Run(Buffer *buffer);
+        void Run(std::vector<Buffer*> &input_buffers, std::vector<Buffer*> &output_buffers);
 
         KernelParams *params;
         Device *device_;
@@ -51,7 +51,7 @@ public:
     void Deinit();
 
     Buffer *CreateBuffer(uint32_t size);
-    void Run(std::string kernel_name, Buffer *buffer);
+    void Run(std::string kernel_name, std::vector<Buffer*> &input_buffers, std::vector<Buffer*> &output_buffers);
 
 private:
     void SetKernelMap();
