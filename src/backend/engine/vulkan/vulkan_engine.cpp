@@ -37,6 +37,7 @@ void saveRenderedImage(void *mappedMemory, int idx) {
 }
 
 void VulkanEngine::Init(int physical_device_id, bool enable_validation) {
+    vk_dispatcher_ = VulkanKernelDispatcher::GetInstance();
     instance_ = new Instance(enable_validation);
     std::vector<VkPhysicalDevice> phys_devices = instance_->EnumeratePhysicalDevices(true);
     device_ = Device::Create(phys_devices[physical_device_id], VK_QUEUE_COMPUTE_BIT, instance_->layers());
@@ -49,11 +50,23 @@ void VulkanEngine::Init(int physical_device_id, bool enable_validation) {
 
         res->device_ = device_;
         std::string kernel_path = (std::string)"../src/kernel/vulkan/shaders/" + it->first + ".spv";
-        res->shader_module_ = ShaderModule::Create(device_->device(), params->buffer_type, kernel_path.c_str());
+        std::vector<VkDescriptorType> buffer_types;
+        buffer_types.resize(params->buffer_type.size());
+        for (uint32_t i=0; i<params->buffer_type.size(); i++) {
+            if (params->buffer_type[i] == DESCRIPTOR_TYPE_STORAGE_BUFFER)
+                buffer_types[i] = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        }
+        res->shader_module_ = ShaderModule::Create(device_->device(), buffer_types, kernel_path.c_str());
         //
+        std::vector<SpecConstant> spec_constants;
+        spec_constants.resize(params->spec_constant.size());
+        for (uint32_t i=0; i<params->spec_constant.size(); i++) {
+            spec_constants[i].id = params->spec_constant[i].id;
+            spec_constants[i].value.u32 = params->spec_constant[i].value.u32;
+        }
         std::vector<VkDescriptorSetLayout> set_layouts = res->shader_module_->descriptor_set_layouts();
         res->pipeline_ = Pipeline::Create(device_->device(), res->shader_module_->shader_module(), 
-                                          set_layouts, "main", params->spec_constant, params->push_constant_num); 
+                                          set_layouts, "main", spec_constants, params->push_constant_num); 
         //
         auto pool_sizes = res->shader_module_->CalculateDescriptorPoolSize();
         res->descriptor_pool_ = DescriptorPool::Create(device_->device(), res->shader_module_->num_sets(), pool_sizes);
@@ -63,8 +76,8 @@ void VulkanEngine::Init(int physical_device_id, bool enable_validation) {
         res->command_buffer_ = CommandBuffer::Create(device_->device(), device_->command_pool());
 
         it++;
-        printf("Finish VulkanEngine::Init.\n");
-    }
+    } 
+    printf("Finish VulkanEngine::Init.\n");
 }
 
 void VulkanEngine::Deinit() {
@@ -87,42 +100,18 @@ void VulkanEngine::Deinit() {
 void VulkanEngine::SetKernelMap() {
     {
         ExecUnit *res = new ExecUnit;
-
-        KernelParams *params = new KernelParams;
-        params->buffer_type = { 
-            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-        };
-        params->spec_constant = {};
-        params->push_constant_num = 0;
-        params->workgroup_size[0] = 32; // TODO: 在comp中写死了，这里的设定只是计算dispatch的group数量，考虑用特化常量
-        params->workgroup_size[1] = 32;
-        params->workgroup_size[2] = 1;
-
-        res->params = params;
+        res->params = vk_dispatcher_->CreateKernelParams("mandelbrot");
         exec_map_["mandelbrot"] = res;
     }
     {
         ExecUnit *res = new ExecUnit;
-
-        KernelParams *params = new KernelParams;
-        params->buffer_type = { 
-            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER      // VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-        };
-        
-        params->spec_constant = {
-            {0, Pipeline::SpecConstant::Type::u32, 640},
-            {1, Pipeline::SpecConstant::Type::u32, 640},
-            {2, Pipeline::SpecConstant::Type::u32, 640},
-        };
-        params->push_constant_num = 0;
-        params->workgroup_size[0] = 16;
-        params->workgroup_size[1] = 1;
-        params->workgroup_size[2] = 1;
-
-        res->params = params;
+        res->params = vk_dispatcher_->CreateKernelParams("matmul_tiled_fp32");
         exec_map_["matmul_tiled_fp32"] = res;
+    }
+    {
+        ExecUnit *res = new ExecUnit;
+        res->params = vk_dispatcher_->CreateKernelParams("engine_test");
+        exec_map_["engine_test"] = res;
     }
 }
 
@@ -182,7 +171,7 @@ int VulkanMain() {
         vulkan::Buffer *buf = engine.CreateBuffer(size);
         std::vector<vulkan::Buffer *> input_buffers = { buf };
         std::vector<vulkan::Buffer *> output_buffers = {};
-        for (uint32_t i=0; i<1; i++) {
+        for (uint32_t i=0; i<2; i++) {
             engine.Run("mandelbrot", input_buffers, output_buffers);
             {
                 vulkan::Buffer *buffer = input_buffers[0];
@@ -212,18 +201,54 @@ int VulkanMain() {
         input_buffer0->UnmapMemory();
         input_buffer1->UnmapMemory();
 
-        for (uint32_t i=0; i<5; i++) {
+        for (uint32_t i=0; i<1; i++) {
             engine.Run("matmul_tiled_fp32", input_buffers, output_buffers);
 
             {
                 vulkan::Buffer *buffer = output_buffers[0];
                 float *mapped_data = (float *)buffer->MapMemory(0, buffer->buffer_size());
-                for (uint32_t i=0; i<640; i++) {
-                    for (uint32_t j=0; j<640; j++) {
+                for (uint32_t i=0; i<2; i++) { // 640
+                    for (uint32_t j=0; j<2; j++) { // 640
                         printf("%f, ", mapped_data[i*640+j]);
                     }
                     printf("\n");
                 }
+                buffer->UnmapMemory();
+            }   
+        }
+        
+        for (int32_t i=0; i<input_buffers.size(); i++)
+            delete input_buffers[i];
+        for (int32_t i=0; i<output_buffers.size(); i++)
+            delete output_buffers[i];
+    }
+
+    {
+        uint32_t len = 640 * 640;
+        uint32_t size = sizeof(float) * len;
+        vulkan::Buffer *input_buffer0 = engine.CreateBuffer(size);
+        vulkan::Buffer *input_buffer1 = engine.CreateBuffer(size);
+        vulkan::Buffer *output_buffer = engine.CreateBuffer(size);
+        std::vector<vulkan::Buffer *> input_buffers = { input_buffer0, input_buffer1 };
+        std::vector<vulkan::Buffer *> output_buffers = { output_buffer };
+
+        float *mapped_data0 = (float *)input_buffer0->MapMemory(0, input_buffer0->buffer_size());
+        float *mapped_data1 = (float *)input_buffer1->MapMemory(0, input_buffer1->buffer_size());
+        for (uint32_t i=0; i<len; i++) {
+            mapped_data0[i] = 1;
+            mapped_data1[i] = 1;
+        }
+        input_buffer0->UnmapMemory();
+        input_buffer1->UnmapMemory();
+
+        for (uint32_t i=0; i<1; i++) {
+            engine.Run("engine_test", input_buffers, output_buffers);
+
+            {
+                vulkan::Buffer *buffer = output_buffers[0];
+                float *mapped_data = (float *)buffer->MapMemory(0, buffer->buffer_size());
+                printf("engine_test0: (%f, %f, %f, %f)\n", mapped_data[0], mapped_data[1], mapped_data[2], mapped_data[3]);
+                printf("engine_test1: (%f, %f, %f, %f)\n", mapped_data[4], mapped_data[5], mapped_data[6], mapped_data[7]);
                 buffer->UnmapMemory();
             }   
         }

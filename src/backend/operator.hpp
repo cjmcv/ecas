@@ -6,7 +6,7 @@
 #define ECAS_BACKEND_OPERATOR_HPP_
 
 #include "ecas/ecas.hpp"
-#include "kernel/kernel_dispatcher.hpp"
+#include "kernel/x86/kernel_dispatcher.hpp"
 
 namespace ecas {
 

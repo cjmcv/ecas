@@ -18,19 +18,13 @@
 #include "descriptor_pool.hpp"
 #include "command_buffer.hpp"
 
+#include "kernel/vulkan/kernel_dispatcher.hpp"
+
 namespace ecas {
 namespace vulkan {
 
-// 固定参数，在kernel注册时指定
-struct KernelParams {
-    std::vector<VkDescriptorType> buffer_type;
-    std::vector<Pipeline::SpecConstant> spec_constant;
-    uint32_t push_constant_num;
-    uint32_t workgroup_size[3];
-};
-
 class VulkanEngine: public Engine {
-    // kernel运行所需资源单元。由Engine创建，一个kernel对应一个executor
+    // kernel运行所需资源单元。由Engine创建，一个kernel对应一个ExecUnit
     class ExecUnit {
     public:
         void Run(std::vector<Buffer*> &input_buffers, std::vector<Buffer*> &output_buffers);
@@ -61,6 +55,7 @@ private:
     Device *device_;
 
     std::unordered_map<std::string, ExecUnit*> exec_map_;
+    VulkanKernelDispatcher *vk_dispatcher_;
 };
 
 } // namespace vulkan

@@ -1,4 +1,5 @@
 #include "pipeline.hpp"
+#include "util/logger.hpp"
 
 namespace ecas {
 namespace vulkan {
@@ -15,36 +16,26 @@ struct SpecConstantData {
 // Packs |spec_constants| into a byte buffer so that they can used for Vulkan
 // API calls.
 SpecConstantData PackSpecConstantData(
-    std::vector<Pipeline::SpecConstant> &spec_constants) {
-    size_t total_size = 0;
-    for (const auto &spec_const : spec_constants) {
-        total_size += spec_const.size();
-    }
+    std::vector<SpecConstant> &spec_constants) {
+
+    size_t const_size = 4; // 只支持4字节，包含int32_t，uint32_t和float
+    size_t total_size = const_size * spec_constants.size();
 
     std::vector<uint8_t> data(total_size);
     std::vector<VkSpecializationMapEntry> entries;
     entries.reserve(spec_constants.size());
 
     uint32_t index = 0;  // Next available byte's index in the buffer
-    for (const auto &spec_const : spec_constants) {  // TODO: 只支持4字节，取消类型
+    for (const auto &spec_const : spec_constants) {
         uint8_t *ptr = data.data() + index;
-        switch (spec_const.type) {
-        case Pipeline::SpecConstant::Type::s32: {
-            *reinterpret_cast<int32_t *>(ptr) = spec_const.value.s32;
-        } break;
-        case Pipeline::SpecConstant::Type::u32: {
-            *reinterpret_cast<uint32_t *>(ptr) = spec_const.value.u32;
-        } break;
-        case Pipeline::SpecConstant::Type::f32: {
-            *reinterpret_cast<float *>(ptr) = spec_const.value.f32;
-        } break;
-        }
+
+        memcpy(ptr, &(spec_const.value.u32), const_size); // TODO: 优化union
         entries.emplace_back();
         entries.back().constantID = spec_const.id;
         entries.back().offset = index;
-        entries.back().size = spec_const.size();
+        entries.back().size = const_size;
 
-        index += spec_const.size();
+        index += const_size;
     }
 
     return SpecConstantData{std::move(data), std::move(entries)};
@@ -52,22 +43,11 @@ SpecConstantData PackSpecConstantData(
 
 }  // namespace
 
-size_t Pipeline::SpecConstant::size() const {
-    switch (type) {
-        case Type::s32:
-            return sizeof(int32_t);
-        case Type::u32:
-            return sizeof(uint32_t);
-        case Type::f32:
-            return sizeof(float);
-    }
-}
-
 Pipeline *Pipeline::Create(VkDevice device, 
                            VkShaderModule shader_module, 
                            std::vector<VkDescriptorSetLayout> &set_layouts,
                            const char *entry_point, 
-                           std::vector<Pipeline::SpecConstant> &spec_constants,
+                           std::vector<SpecConstant> &spec_constants,
                            uint32_t push_constant_num) {
   
     // Pack the specialization constant into an byte buffer

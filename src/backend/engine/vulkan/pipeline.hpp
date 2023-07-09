@@ -12,24 +12,18 @@
 namespace ecas {
 namespace vulkan {
 
+struct SpecConstant {
+    uint32_t id;
+    union {
+        int32_t s32;
+        uint32_t u32;
+        float f32;
+    } value;
+};
+
 class Pipeline {
 public:
-    // Specialization constant.
-    struct SpecConstant {
-        uint32_t id;
-        enum class Type {
-            s32,
-            u32,
-            f32,
-        } type;
-        union {
-            int32_t s32;
-            uint32_t u32;
-            float f32;
-        } value;
 
-        size_t size() const;
-    };
     union PushConstant {
         int i;
         float f;
@@ -39,7 +33,7 @@ public:
                            VkShaderModule shader_module, 
                            std::vector<VkDescriptorSetLayout> &set_layouts,
                            const char *entry_point, 
-                           std::vector<Pipeline::SpecConstant> &spec_constants,
+                           std::vector<SpecConstant> &spec_constants,
                            uint32_t push_constant_count);
 
     ~Pipeline();
