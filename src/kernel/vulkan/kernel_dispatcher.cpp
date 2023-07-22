@@ -52,7 +52,7 @@ void SetParamsEngineTest(KernelParams *params) {
     c.value.f32 = 640.123f;
     params->spec_constant.push_back(c);
 
-    params->push_constant_num = 0;
+    params->push_constant_num = 2;
     params->workgroup_size[0] = 16;
     params->workgroup_size[1] = 1;
     params->workgroup_size[2] = 1;

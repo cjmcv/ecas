@@ -18,6 +18,13 @@ layout(constant_id = 0) const uint M = 1;
 layout(constant_id = 1) const uint N = 1;
 layout(constant_id = 2) const float K = 1;
 
+// 创建pipeline layout时，需要用VkPushConstantRange指定push constant的数据大小范围。
+// 在kernel运行时，用vkCmdPushConstants来推送实际的数值
+layout(push_constant) uniform Parameters {
+   uint Width;
+   uint Height;
+} params;
+
 /*
     const uvec3 gl_WorkGroupSize: contains the size of the workgroup operated on by a compute shader
     in uvec3 gl_NumWorkGroups: contains the number of workgroups that have been dispatched to a compute shader
@@ -36,7 +43,7 @@ void main()
     uvec2 laneId = gl_LocalInvocationID.xy;
 
     if (gID.x == 0 && gID.y == 0) {
-        outputO.x[0] = vec4(M, N, K, 111.f);
-        outputO.x[1] = vec4(gSize.x, gSize.y, gSize.z, 123.f);
+        outputO.x[0] = vec4(M, N, K, params.Width);
+        outputO.x[1] = vec4(gSize.x, gSize.y, gSize.z, params.Height);
     }
 }

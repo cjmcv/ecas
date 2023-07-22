@@ -40,6 +40,8 @@ public:
         const Pipeline *pipeline,
         std::vector<VkDescriptorSet> &&descriptor_sets);
 
+    void PushConstant(VkPipelineLayout layout, const int params_size, const void *params);
+
     // Records a dispatch command.
     void Dispatch(uint32_t x, uint32_t y, uint32_t z);
 

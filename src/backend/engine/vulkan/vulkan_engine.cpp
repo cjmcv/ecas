@@ -46,7 +46,7 @@ void VulkanEngine::Init(int physical_device_id, bool enable_validation) {
     std::unordered_map<std::string, ExecUnit*>::iterator it = exec_map_.begin();
     while (it != exec_map_.end()) {
         ExecUnit *res = it->second;
-        KernelParams *params = res->params;
+        KernelParams *params = res->params_;
 
         res->device_ = device_;
         std::string kernel_path = (std::string)"../src/kernel/vulkan/shaders/" + it->first + ".spv";
@@ -89,7 +89,7 @@ void VulkanEngine::Deinit() {
         delete res->descriptor_pool_;
         delete res->pipeline_;
         delete res->shader_module_;
-        delete res->params;
+        delete res->params_;
         delete res;
         it++;
     }
@@ -100,17 +100,17 @@ void VulkanEngine::Deinit() {
 void VulkanEngine::SetKernelMap() {
     {
         ExecUnit *res = new ExecUnit;
-        res->params = vk_dispatcher_->CreateKernelParams("mandelbrot");
+        res->params_ = vk_dispatcher_->CreateKernelParams("mandelbrot");
         exec_map_["mandelbrot"] = res;
     }
     {
         ExecUnit *res = new ExecUnit;
-        res->params = vk_dispatcher_->CreateKernelParams("matmul_tiled_fp32");
+        res->params_ = vk_dispatcher_->CreateKernelParams("matmul_tiled_fp32");
         exec_map_["matmul_tiled_fp32"] = res;
     }
     {
         ExecUnit *res = new ExecUnit;
-        res->params = vk_dispatcher_->CreateKernelParams("engine_test");
+        res->params_ = vk_dispatcher_->CreateKernelParams("engine_test");
         exec_map_["engine_test"] = res;
     }
 }
@@ -123,7 +123,7 @@ Buffer *VulkanEngine::CreateBuffer(uint32_t size) {
                           size);
 }
 
-void VulkanEngine::Run(std::string kernel_name, std::vector<Buffer*> &input_buffers, std::vector<Buffer*> &output_buffers) {
+void VulkanEngine::Run(std::string kernel_name, std::vector<Buffer*> &input_buffers, const int push_constant_size, const void *push_constant, std::vector<Buffer*> &output_buffers) {
     std::unordered_map<std::string, ExecUnit*>::iterator it = exec_map_.find(kernel_name);
     if (it == exec_map_.end()) {
         // ECAS_LOGE("Can not find Op: %s.\n", kernel_name.c_str());
@@ -131,17 +131,17 @@ void VulkanEngine::Run(std::string kernel_name, std::vector<Buffer*> &input_buff
         return;
     }
     ExecUnit *res = it->second;
-    res->Run(input_buffers, output_buffers);
+    res->Run(input_buffers, push_constant_size, push_constant, output_buffers);
 }
 
 /////
 
-void VulkanEngine::ExecUnit::Run(std::vector<Buffer*> &input_buffers, std::vector<Buffer*> &output_buffers) {
+void VulkanEngine::ExecUnit::Run(std::vector<Buffer*> &input_buffers, const int push_constant_size, const void *push_constant, std::vector<Buffer*> &output_buffers) {
     static int idx = 0;
     idx++;
     printf("round idx: %d.\n", idx);
 
-    // buffer绑定顺序需要跟comp里一致
+    // buffer绑定顺序需要跟comp里一致, 即i与comp里对应的一致
     for (int32_t i=0; i<input_buffers.size(); i++)
         descriptor_pool_->WriteBuffer(descriptor_set_, i, input_buffers[i]);
     for (int32_t i=0; i<output_buffers.size(); i++)
@@ -149,8 +149,10 @@ void VulkanEngine::ExecUnit::Run(std::vector<Buffer*> &input_buffers, std::vecto
 
     command_buffer_->Begin();
     command_buffer_->BindPipelineAndDescriptorSets(pipeline_, {descriptor_set_});
-    command_buffer_->Dispatch((uint32_t)ceil(WIDTH / float(params->workgroup_size[0])), 
-                              (uint32_t)ceil(HEIGHT / float(params->workgroup_size[1])), 
+    if (push_constant_size != 0)
+        command_buffer_->PushConstant(pipeline_->pipeline_layout(), push_constant_size, push_constant);
+    command_buffer_->Dispatch((uint32_t)ceil(WIDTH / float(params_->workgroup_size[0])), 
+                              (uint32_t)ceil(HEIGHT / float(params_->workgroup_size[1])), 
                               1);
     command_buffer_->End();
 
@@ -172,7 +174,7 @@ int VulkanMain() {
         std::vector<vulkan::Buffer *> input_buffers = { buf };
         std::vector<vulkan::Buffer *> output_buffers = {};
         for (uint32_t i=0; i<2; i++) {
-            engine.Run("mandelbrot", input_buffers, output_buffers);
+            engine.Run("mandelbrot", input_buffers, 0, nullptr, output_buffers);
             {
                 vulkan::Buffer *buffer = input_buffers[0];
                 void *mapped_data = buffer->MapMemory(0, buffer->buffer_size());
@@ -202,7 +204,7 @@ int VulkanMain() {
         input_buffer1->UnmapMemory();
 
         for (uint32_t i=0; i<1; i++) {
-            engine.Run("matmul_tiled_fp32", input_buffers, output_buffers);
+            engine.Run("matmul_tiled_fp32", input_buffers, 0, nullptr, output_buffers);
 
             {
                 vulkan::Buffer *buffer = output_buffers[0];
@@ -242,7 +244,8 @@ int VulkanMain() {
         input_buffer1->UnmapMemory();
 
         for (uint32_t i=0; i<1; i++) {
-            engine.Run("engine_test", input_buffers, output_buffers);
+            uint32_t p[2] = { 12, 23 };
+            engine.Run("engine_test", input_buffers, sizeof(uint32_t) * 2, p, output_buffers);
 
             {
                 vulkan::Buffer *buffer = output_buffers[0];

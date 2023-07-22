@@ -23,7 +23,7 @@ struct SpecConstant {
 
 class Pipeline {
 public:
-
+    
     union PushConstant {
         int i;
         float f;

@@ -74,6 +74,10 @@ void CommandBuffer::BindPipelineAndDescriptorSets(
     }
 }
 
+void CommandBuffer::PushConstant(VkPipelineLayout layout, const int params_size, const void *params) {
+    vkCmdPushConstants(command_buffer_, layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, params_size, params);
+}
+
 void CommandBuffer::Dispatch(uint32_t x, uint32_t y, uint32_t z) {
     vkCmdDispatch(command_buffer_, x, y, z);
 }

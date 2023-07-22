@@ -38,6 +38,8 @@ struct KernelParams {
     uint32_t workgroup_size[3];
 };
 
+// TODO: 针对gpu kernel，可能需要额外的参数，这些通过补充成员来实现。
+//       vulkan额外参数，主要包含有pipeline，pipeline cache等。如函数参数一般用push constant送入
 // 1. 根据型号，确定线程布局。2. 选择spirv文件。
 // 原则：尽可能不添加太多kernel外的内容，使这部分代码可以快速解耦使用到其他地方，也方便后面快速加入其他地方的代码。
 
